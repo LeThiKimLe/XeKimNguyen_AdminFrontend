@@ -1,0 +1,24 @@
+.userIcon img {
+    width: 200px;
+    height: 200px;
+    object-fit: cover;
+    margin: 10px;
+}
+
+.inforForm {
+    text-align: left;
+}
+
+.updateBtn {
+    margin-bottom: 20px;
+    float: right;
+    margin: 0 10px;
+    width: 180px;
+}
+
+.btnGroup {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    margin: 10px 0;
+}

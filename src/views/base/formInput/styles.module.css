@@ -1,0 +1,66 @@
+.formInput {
+    margin-bottom: 10px;
+}
+
+.inputContain {
+    display: inline-block;
+    margin: 10px 0;
+    position: relative;
+}
+
+.inputInput {
+    font-size: 15px;
+    padding: 15px;
+    width: 100%;
+    height: 100%;
+    border: 1px solid #000;
+    border-radius: 10px;
+}
+
+.inputSelect {
+    font-size: 15px;
+    padding: 15px 0;
+    width: 100%;
+    height: 100%;
+}
+
+.inputSelect.readonly {
+    padding-left: 15px;
+}
+
+.inputInput.readonly {
+    border: none;
+    outline: none;
+}
+
+.inputLabel {
+    font-size: 16px;
+    font-weight: 500;
+    display: inline-block;
+    min-width: 150px;
+    margin-right: 10px;
+}
+
+.inputError {
+    color: red;
+    font-size: 13px;
+    font-weight: 400;
+    text-align: left;
+    margin-bottom: 10px;
+    display: none;
+    position: absolute;
+    /* bottom: -30px; */
+    clear: both;
+}
+
+.inputInput:invalid[focused='true'] {
+    border: 1px solid red;
+}
+
+.inputInput:invalid[focused='true'] ~ .inputError {
+    display: block;
+}
+
+.input-required {
+    color: red !important;
+}

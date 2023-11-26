@@ -1,0 +1,5 @@
+Chạy prettier:
+npx prettier --write .
+
+Sửa hết các file:
+prettier --write "**/*.{js,css,json}"
