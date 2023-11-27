@@ -25,6 +25,9 @@ import { cilCursor } from '@coreui/icons'
 import { NavLink } from 'react-router-dom'
 import { useDispatch } from 'react-redux'
 import { ticketActions } from 'src/feature/ticket/ticket.slice'
+import { searchAction } from 'src/feature/search/search.slice'
+import { selectListRoute } from 'src/feature/route/route.slice'
+import format from 'date-fns/format'
 const TicketDetail = ({ visible }) => {
     const booking = useSelector(selectCurrentBooking)
     const dispatch = useDispatch()
@@ -36,6 +39,11 @@ const TicketDetail = ({ visible }) => {
         if (state === 'Đã thanh toán') return 'success'
         else if (state === 'Chờ thanh toán') return 'warning'
         else return 'danger'
+    }
+    const handleSetPosition = (ticket) => {
+        const currentInfor = {
+            infor: 1,
+        }
     }
     return (
         <CCollapse visible={visible}>
@@ -191,7 +199,10 @@ const TicketDetail = ({ visible }) => {
                                                         </CFormText>
                                                     </CCardBody>
                                                     <CCardFooter style={{ textAlign: 'center' }}>
-                                                        <NavLink to={'/booking'}>
+                                                        <NavLink
+                                                            to={'/booking'}
+                                                            onClick={handleSetPosition}
+                                                        >
                                                             Xem vị trí
                                                             <CIcon
                                                                 icon={cilCursor}

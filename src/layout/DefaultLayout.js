@@ -8,11 +8,16 @@ import { useDispatch } from 'react-redux'
 
 const DefaultLayout = () => {
     const dispatch = useDispatch()
-    const validSession = JSON.parse(localStorage.getItem('validSession'))
+    const [validSession, setValidSession] = useState(
+        JSON.parse(localStorage.getItem('validSession')),
+    )
     const [confirm, setConfirm] = useState(false)
-    useEffect(() => {
-        if (validSession === false) dispatch(authActions.deleteUserInfor())
-    }, [validSession])
+    const handleLogout = () => {
+        dispatch(authActions.deleteUserInfor())
+    }
+    window.addEventListener('storage', () => {
+        setValidSession(JSON.parse(localStorage.getItem('validSession')))
+    })
     if (validSession) {
         return (
             <div>
@@ -32,10 +37,9 @@ const DefaultLayout = () => {
                 <CustomNotice
                     title={'Bạn cần đăng nhập lại'}
                     content={'Phiên đăng nhập của bạn bị gián đoạn. Hãy đăng nhập lại'}
-                    onContinue={() => setConfirm(true)}
+                    onContinue={handleLogout}
                 ></CustomNotice>
             )
-        else return <Navigate to="login" replace></Navigate>
     }
 }
 

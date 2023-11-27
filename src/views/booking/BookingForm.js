@@ -31,7 +31,6 @@ import {
 } from 'src/feature/booking/booking.slice'
 import { getRouteName, getTripName } from 'src/utils/tripUtils'
 import { convertToDisplayDate } from 'src/utils/convertUtils'
-import { listTicket } from './test/data'
 import bookingThunk from 'src/feature/booking/booking.service'
 import { useDispatch } from 'react-redux'
 import { CustomToast } from 'src/views/customToast/CustomToast'

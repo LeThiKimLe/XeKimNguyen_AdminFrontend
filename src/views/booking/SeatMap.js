@@ -9,7 +9,7 @@ import {
     CRow,
     CCardFooter,
 } from '@coreui/react'
-import { listTicket } from './test/data'
+//import { listTicket } from './test/data'
 import CIcon from '@coreui/icons-react'
 import {
     cilPlus,
@@ -28,6 +28,8 @@ import { useDispatch } from 'react-redux'
 import { bookingActions } from 'src/feature/booking/booking.slice'
 import BookingForm from './BookingForm'
 import { useState } from 'react'
+import { selectTripTicket } from 'src/feature/booking/booking.slice'
+import { listTicket } from './test/data'
 
 const SeatMap = ({ seatMap }) => {
     const dispatch = useDispatch()
@@ -42,6 +44,8 @@ const SeatMap = ({ seatMap }) => {
     const cancelBooking = () => {
         dispatch(bookingActions.reset())
     }
+
+    // const listTicket = useSelector(selectTripTicket)
 
     const handleShowBookingForm = (open) => {
         setShowBookingForm(open)

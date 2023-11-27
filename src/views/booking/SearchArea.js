@@ -125,59 +125,51 @@ const SearchArea = () => {
             })
         }
     }, [currentInfor.desLocation])
-
+    console.log(currentInfor)
     return (
         <>
             <CToaster push={toast} placement="top-end" />
             <CForm>
                 <CRow>
                     <CCol md="3">
-                        <CForm>
-                            <CFormLabel>Điểm đi</CFormLabel>
-                            <Select
-                                options={depOptions}
-                                ref={originPlaceInput}
-                                value={currentInfor.departLocation}
-                                onChange={handleOriginPlace}
-                                placeholder="Chọn điểm đi"
-                            ></Select>
-                        </CForm>
+                        <CFormLabel>Điểm đi</CFormLabel>
+                        <Select
+                            options={depOptions}
+                            ref={originPlaceInput}
+                            value={currentInfor.departLocation}
+                            onChange={handleOriginPlace}
+                            placeholder="Chọn điểm đi"
+                        ></Select>
                     </CCol>
                     <CCol md="3">
-                        <CForm>
-                            <CFormLabel>Điểm đến</CFormLabel>
-                            <Select
-                                options={desOptions}
-                                value={currentInfor.desLocation}
-                                onFocus={checkOrigin}
-                                onChange={handleDesPlace}
-                                placeholder="Chọn điểm đến"
-                            ></Select>
-                        </CForm>
+                        <CFormLabel>Điểm đến</CFormLabel>
+                        <Select
+                            options={desOptions}
+                            value={currentInfor.desLocation}
+                            onFocus={checkOrigin}
+                            onChange={handleDesPlace}
+                            placeholder="Chọn điểm đến"
+                        ></Select>
                     </CCol>
                     <CCol md="2">
-                        <CForm>
-                            <CFormLabel>Ngày khởi hành</CFormLabel>
-                            <DatePicker
-                                selected={parse(currentInfor.departDate, 'dd/MM/yyyy', new Date())}
-                                onChange={chooseOriginDate}
-                                dateFormat="dd/MM/yyyy"
-                                placeholderText="Chọn ngày đi"
-                                minDate={today}
-                                maxDate={twoMonthsLater}
-                                className="form-control"
-                            />
-                        </CForm>
+                        <CFormLabel>Ngày khởi hành</CFormLabel>
+                        <DatePicker
+                            selected={parse(currentInfor.departDate, 'dd/MM/yyyy', new Date())}
+                            onChange={chooseOriginDate}
+                            dateFormat="dd/MM/yyyy"
+                            placeholderText="Chọn ngày đi"
+                            minDate={today}
+                            maxDate={twoMonthsLater}
+                            className="form-control"
+                        />
                     </CCol>
                     <CCol md="2">
-                        <CForm>
-                            <CFormLabel>Số vé</CFormLabel>
-                            <CFormInput
-                                type="number"
-                                value={quantity}
-                                onChange={handleQuantityChange}
-                            />
-                        </CForm>
+                        <CFormLabel>Số vé</CFormLabel>
+                        <CFormInput
+                            type="number"
+                            value={quantity}
+                            onChange={handleQuantityChange}
+                        />
                     </CCol>
                     <CCol md="2" className="d-flex justify-content-center align-items-end p-1">
                         <CustomButton

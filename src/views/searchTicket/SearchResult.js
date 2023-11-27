@@ -10,10 +10,13 @@ import {
     CCol,
     CFormText,
 } from '@coreui/react'
-import { listBooking } from './test/data'
 import { getTripRoute } from 'src/utils/tripUtils'
 import { useState } from 'react'
 import { getDate, convertToDisplayDate } from 'src/utils/convertUtils'
+import { useSelector } from 'react-redux'
+import { selectListBooking } from 'src/feature/ticket/ticket.slice'
+import { listBooking } from './test/data'
+
 const BookingSum = ({ booking, handleChoose }) => {
     const compareByTime = (a, b) => {
         const currentTime = new Date()
@@ -51,6 +54,7 @@ const BookingSum = ({ booking, handleChoose }) => {
     )
 }
 const SearchResult = ({ visible, handleChoose }) => {
+    // const listBooking = useSelector(selectListBooking)
     const isDue = (ticket) => {
         const departTime = getDate(ticket.schedule.departDate, ticket.schedule.departTime)
         const today = new Date()

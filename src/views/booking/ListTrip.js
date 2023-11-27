@@ -2,20 +2,7 @@ import React from 'react'
 import { selectRearchResult, selectSearchInfor } from 'src/feature/search/search.slice'
 import { useSelector } from 'react-redux'
 import TripInfor from './TripInfor'
-import {
-    CRow,
-    CCol,
-    CContainer,
-    CCard,
-    CCollapse,
-    CCardBody,
-    CCardTitle,
-    CCardSubtitle,
-    CForm,
-    CFormLabel,
-    CFormText,
-    CFormInput,
-} from '@coreui/react'
+import { CRow, CContainer, CCard, CCollapse } from '@coreui/react'
 import { useState, useEffect } from 'react'
 import { convertToDisplayDate } from 'src/utils/convertUtils'
 import SeatMap from './SeatMap'
@@ -23,14 +10,24 @@ import TripDetail from './TripDetail'
 import { useDispatch } from 'react-redux'
 import { bookingActions } from 'src/feature/booking/booking.slice'
 import { selectCurrentTrip } from 'src/feature/booking/booking.slice'
+import { selectLoading } from 'src/feature/auth/auth.slice'
+import bookingThunk from 'src/feature/booking/booking.service'
+import { CSpinner } from '@coreui/react'
 
 const ListTrip = () => {
     const dispatch = useDispatch()
     const searchResult = useSelector(selectRearchResult)
     const currentTrip = useSelector(selectCurrentTrip)
+    const loading = useSelector(selectLoading)
     const handleSelectTrip = (trip) => {
         if (currentTrip && currentTrip.id === trip.id) dispatch(bookingActions.setCurrentTrip(null))
-        else dispatch(bookingActions.setCurrentTrip(trip))
+        else {
+            dispatch(bookingActions.setCurrentTrip(trip))
+            dispatch(bookingThunk.getScheduleInfor(trip.id))
+                .unwrap()
+                .then(() => {})
+                .catch((error) => {})
+        }
     }
     useEffect(() => {
         dispatch(bookingActions.reset())
@@ -67,12 +64,17 @@ const ListTrip = () => {
                     </CRow>
                     <CRow>
                         <CCollapse visible={currentTrip !== null}>
-                            {currentTrip && (
+                            {currentTrip && loading === false && (
                                 <CCard>
                                     <SeatMap
                                         seatMap={currentTrip.tripInfor.route.busType.seatMap}
                                     ></SeatMap>
                                 </CCard>
+                            )}
+                            {loading === true && (
+                                <div className="d-flex justify-content-center">
+                                    <CSpinner />
+                                </div>
                             )}
                         </CCollapse>
                     </CRow>

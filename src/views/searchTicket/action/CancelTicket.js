@@ -54,9 +54,14 @@ const CancelTicket = ({ visible, setVisible }) => {
     const [getPolicy, setGetPolicy] = useState(false)
     const loading = useSelector(selectLoading)
     const [allowCancel, setAllowCancel] = useState(true)
+    const [payment, setPayment] = useState('')
     const handleCancelTicket = () => {
         dispatch(
-            ticketThunk.cancelTicket({ bookingCode: currentBooking.code, listCancel: listChosen }),
+            ticketThunk.cancelTicket({
+                bookingCode: currentBooking.code,
+                payment: payment,
+                listCancel: listChosen,
+            }),
         )
             .unwrap()
             .then(() => {
@@ -65,6 +70,9 @@ const CancelTicket = ({ visible, setVisible }) => {
             .catch((error) => {
                 addToast(() => CustomToast({ message: error, type: 'error' }))
             })
+    }
+    const handleChoosePayment = (e) => {
+        setPayment(e.target.value)
     }
     useEffect(() => {
         if (getPolicy && currentBooking && visible)
@@ -191,7 +199,7 @@ const CancelTicket = ({ visible, setVisible }) => {
                             {policy && policy.transaction && (
                                 <>
                                     <CFormLabel>Chọn hình thức hoàn tiền</CFormLabel>
-                                    <CFormSelect>
+                                    <CFormSelect value={payment} onChange={handleChoosePayment}>
                                         <option value="cash">Tiền mặt</option>
                                         <option value={currentBooking.transaction.paymentMethod}>
                                             Chuyển khoản

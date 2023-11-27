@@ -38,15 +38,19 @@ const AppHeaderDropdown = () => {
     const [openLogoutForm, setOpenLogoutForm] = useState(false)
     const loading = useSelector(selectLoading)
     const user = useSelector(selectUser)
+    const navigate = useNavigate()
     const [img, setImg] = useState(user.user.staff.img ? user.user.staff.img : '')
     const handleLogout = () => {
         // dispatch(authActions.deleteUserInfor())
         dispatch(authThunk.logout())
             .unwrap()
             .then(() => {
-                setOpenLogoutForm(false)
+                navigate('/login', { replace: true })
             })
-            .catch((error) => {})
+            .catch((error) => {
+                setOpenLogoutForm(false)
+                dispatch(authActions.deleteUserInfor())
+            })
     }
     const handleCancel = () => {
         setOpenLogoutForm(false)

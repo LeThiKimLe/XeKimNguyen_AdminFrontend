@@ -1,5 +1,6 @@
 import React from 'react'
-import { useState } from 'react'
+import { useState, useRef } from 'react'
+import axiosClient from 'src/api/adminAxios'
 import {
     CForm,
     CRow,
@@ -11,6 +12,7 @@ import {
     CDropdownToggle,
     CDropdownItem,
     CDropdownMenu,
+    CToaster,
 } from '@coreui/react'
 import CustomButton from '../customButton/CustomButton'
 import CIcon from '@coreui/icons-react'
@@ -20,9 +22,12 @@ import { useDispatch } from 'react-redux'
 import { ticketActions } from 'src/feature/ticket/ticket.slice'
 import TicketDetail from './TicketDetail'
 import { useSelector } from 'react-redux'
-import { selectListTicket } from 'src/feature/ticket/ticket.slice'
+import { selectListTicket, selectCurrentBooking } from 'src/feature/ticket/ticket.slice'
 import ExportTicket from './action/ExportTicket'
 import CancelTicket from './action/CancelTicket'
+import ticketThunk from 'src/feature/ticket/ticket.service'
+import { CustomToast } from '../customToast/CustomToast'
+import { selectLoading } from 'src/feature/ticket/ticket.slice'
 const SearchTicket = () => {
     const [tel, setTel] = useState('')
     const [searchView, setSearchView] = useState(false)
@@ -30,6 +35,10 @@ const SearchTicket = () => {
     const [showAction, setShowAction] = useState(false)
     const [showExport, setShowExport] = useState(false)
     const [showCancel, setShowCancel] = useState(false)
+    const currentBooking = useSelector(selectCurrentBooking)
+    const loading = useSelector(selectLoading)
+    const [toast, addToast] = useState('')
+    const toaster = useRef('')
     const dispatch = useDispatch()
     const listChosenTicket = useSelector(selectListTicket)
     const changeTel = (e) => {
@@ -38,8 +47,37 @@ const SearchTicket = () => {
         setTel(e.target.value)
         if (listChosenTicket !== null) dispatch(ticketActions.resetTicket())
     }
-    const handleSearch = () => {
+    const handleSearch = async () => {
         setSearchView(true)
+        // dispatch(ticketThunk.searchTicket(tel))
+        //     .unwrap()
+        //     .then(() => {
+        //         setSearchView(true)
+        //     })
+        //     .catch((error) => {
+        //         addToast(() => CustomToast({ message: error, type: 'success' }))
+        //     })
+        // try {
+        //     const response = await axiosClient.get('locations')
+        //     console.log(response)
+        // } catch (error) {
+        //     const message =
+        //         (error.response && error.response.data && error.response.data.message) ||
+        //         error.message ||
+        //         error.toString()
+        //     console.log(message)
+        // }
+    }
+    const handleExportTicket = (e) => {
+        e.preventDefault()
+        dispatch(ticketThunk.exportTicket(currentBooking.code))
+            .unwrap()
+            .then(() => {
+                setShowExport(true)
+            })
+            .catch((error) => {
+                console.log(error)
+            })
     }
     const handleChooseBooking = (booking) => {
         setSearchView(false)
@@ -48,6 +86,7 @@ const SearchTicket = () => {
     }
     return (
         <>
+            <CToaster ref={toaster} push={toast} placement="top-end" />
             <CForm className="mb-1">
                 <CRow>
                     <CCol md="5">
@@ -70,6 +109,7 @@ const SearchTicket = () => {
                             color="success"
                             variant="outline"
                             onClick={handleSearch}
+                            loading={loading}
                         ></CustomButton>
                     </CCol>
                     {listChosenTicket.length > 0 && (
@@ -79,10 +119,12 @@ const SearchTicket = () => {
                                 <CDropdownMenu>
                                     <CDropdownItem
                                         href="#"
-                                        onClick={(e) => {
-                                            e.preventDefault()
-                                            setShowExport(true)
-                                        }}
+                                        onClick={handleExportTicket}
+                                        disabled={
+                                            (currentBooking &&
+                                                currentBooking.transaction === null) ||
+                                            (currentBooking && currentBooking.ticketing === true)
+                                        }
                                     >
                                         Xuất vé
                                     </CDropdownItem>
@@ -96,6 +138,14 @@ const SearchTicket = () => {
                                         Hủy vé
                                     </CDropdownItem>
                                     <CDropdownItem href="#">Đổi vé</CDropdownItem>
+                                    <CDropdownItem
+                                        href="#"
+                                        disabled={
+                                            currentBooking && currentBooking.transaction !== null
+                                        }
+                                    >
+                                        Thanh toán vé
+                                    </CDropdownItem>
                                 </CDropdownMenu>
                             </CDropdown>
                         </CCol>

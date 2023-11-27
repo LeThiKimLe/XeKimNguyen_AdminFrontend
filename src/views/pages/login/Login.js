@@ -79,7 +79,6 @@ const Login = () => {
                 )
         }
     }, [userRole])
-
     return (
         <>
             <CToaster ref={toaster} push={toast} placement="top-end" />

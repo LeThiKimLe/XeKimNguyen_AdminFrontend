@@ -1,25 +1,29 @@
 import { createAsyncThunk } from '@reduxjs/toolkit'
-import axiosClient from '../../api/axios'
+import axiosClient from 'src/api/staffAxios'
 
-const getTicketCancelRequest = createAsyncThunk('tickets/request-cancel', async (_, thunkAPI) => {
-    try {
-        const response = await axiosClient.get('tickets/request-cancel')
-        return response
-    } catch (error) {
-        const message =
-            (error.response && error.response.data && error.response.data.message) ||
-            error.message ||
-            error.toString()
-        return thunkAPI.rejectWithValue(message)
-    }
-})
-const cancelTicket = createAsyncThunk(
-    'tickets/cancel',
-    async ({ bookingCode, listCancel }, thunkAPI) => {
+const getTicketCancelRequest = createAsyncThunk(
+    'staff/tickets/request-cancel',
+    async (_, thunkAPI) => {
         try {
-            const response = await axiosClient.post('tickets/cancel', {
+            const response = await axiosClient.get('staff/tickets/request-cancel')
+            return response
+        } catch (error) {
+            const message =
+                (error.response && error.response.data && error.response.data.message) ||
+                error.message ||
+                error.toString()
+            return thunkAPI.rejectWithValue(message)
+        }
+    },
+)
+const cancelTicket = createAsyncThunk(
+    'staff/tickets/cancel',
+    async ({ bookingCode, payment, listCancel }, thunkAPI) => {
+        try {
+            const response = await axiosClient.post('staff/tickets/cancel', {
                 bookingCode: bookingCode,
                 numberTicket: listCancel.length,
+                paymentMethod: payment,
                 ticketIdList: listCancel.map((ticket) => ticket.id),
             })
             return response
@@ -97,12 +101,67 @@ const editTicket = createAsyncThunk(
         }
     },
 )
-
+const exportTicket = createAsyncThunk(
+    'staff/bookings/is-ticketing',
+    async (bookingCode, thunkAPI) => {
+        try {
+            const response = await axiosClient.put('staff/bookings/is-ticketing', null, {
+                params: {
+                    bookingCode: bookingCode,
+                },
+            })
+            return response
+        } catch (error) {
+            const message =
+                (error.response && error.response.data && error.response.data.message) ||
+                error.message ||
+                error.toString()
+            return thunkAPI.rejectWithValue(message)
+        }
+    },
+)
+const approveCancelTicket = createAsyncThunk(
+    'staff/tickets/cancel-approval',
+    async ({ requestId, approved }, thunkAPI) => {
+        try {
+            const response = await axiosClient.post('staff/tickets/cancel-approval', {
+                cancelRequestId: requestId,
+                approved: approved,
+            })
+            return response
+        } catch (error) {
+            const message =
+                (error.response && error.response.data && error.response.data.message) ||
+                error.message ||
+                error.toString()
+            return thunkAPI.rejectWithValue(message)
+        }
+    },
+)
+const searchTicket = createAsyncThunk('staff/bookings/search-tel', async (tel, thunkAPI) => {
+    try {
+        const response = await axiosClient.get('staff/bookings/search-tel', {
+            params: {
+                tel: tel,
+            },
+        })
+        return response
+    } catch (error) {
+        const message =
+            (error.response && error.response.data && error.response.data.message) ||
+            error.message ||
+            error.toString()
+        return thunkAPI.rejectWithValue(message)
+    }
+})
 const ticketThunk = {
     getTicketCancelRequest,
     cancelTicket,
     verifyCancelTicketPolicy,
     changeTicket,
     editTicket,
+    exportTicket,
+    approveCancelTicket,
+    searchTicket,
 }
 export default ticketThunk

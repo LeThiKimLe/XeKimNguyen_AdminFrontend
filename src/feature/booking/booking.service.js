@@ -63,10 +63,51 @@ const bookingPayment = createAsyncThunk(
     },
 )
 
+const getScheduleInfor = createAsyncThunk(
+    'staff/tickets/schedule-ticket',
+    async (scheduleId, thunkAPI) => {
+        try {
+            const response = await axiosClient.get('staff/tickets/schedule-ticket', {
+                params: {
+                    scheduleId: scheduleId,
+                },
+            })
+            return response
+        } catch (error) {
+            const message =
+                (error.response && error.response.data && error.response.data.message) ||
+                error.message ||
+                error.toString()
+            return thunkAPI.rejectWithValue(message)
+        }
+    },
+)
+
+const payBooking = createAsyncThunk(
+    'staff/tickets/payment',
+    async ({ bookingCode, paymentMethod }, thunkAPI) => {
+        try {
+            const response = await axiosClient.post('staff/tickets/payment', {
+                bookingCode: bookingCode,
+                paymentMethod: paymentMethod,
+            })
+            return response
+        } catch (error) {
+            const message =
+                (error.response && error.response.data && error.response.data.message) ||
+                error.message ||
+                error.toString()
+            return thunkAPI.rejectWithValue(message)
+        }
+    },
+)
+
 const bookingThunk = {
     bookingForUser,
     getBookingInfor,
     bookingPayment,
+    getScheduleInfor,
+    payBooking,
 }
 
 export default bookingThunk

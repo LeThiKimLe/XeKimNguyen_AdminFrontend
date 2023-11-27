@@ -4,7 +4,7 @@ import queryString from 'query-string'
 const API_URL = process.env.REACT_APP_API_URL
 
 const axiosClient = axios.create({
-    baseURL: API_URL,
+    baseURL: API_URL + 'admin/',
     headers: {
         Accept: 'application/json',
         Authorization: '',

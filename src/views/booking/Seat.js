@@ -9,7 +9,7 @@ import {
     CRow,
     CCardFooter,
 } from '@coreui/react'
-import { listTicket } from './test/data'
+// import { listTicket } from './test/data'
 import CIcon from '@coreui/icons-react'
 import { useState } from 'react'
 import {
@@ -26,11 +26,13 @@ import { bookingActions } from 'src/feature/booking/booking.slice'
 import { useSelector } from 'react-redux'
 import { selectListChosen } from 'src/feature/booking/booking.slice'
 import { useEffect } from 'react'
+import { selectTripTicket } from 'src/feature/booking/booking.slice'
 
 const Seat = ({ seat, ticket, empty }) => {
     const dispatch = useDispatch()
     const [active, setActive] = useState(false)
     const listChosen = useSelector(selectListChosen)
+    const listTicket = useSelector(selectTripTicket)
     const getTicketNumber = () => {
         return listTicket.filter(
             (tk) => tk.state !== 'Đã hủy' && tk.booking.code === ticket.booking.code,
