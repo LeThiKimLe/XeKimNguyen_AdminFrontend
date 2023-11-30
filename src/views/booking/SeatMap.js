@@ -9,16 +9,6 @@ import {
     CRow,
     CCardFooter,
 } from '@coreui/react'
-//import { listTicket } from './test/data'
-import CIcon from '@coreui/icons-react'
-import {
-    cilPlus,
-    cilChevronDoubleUp,
-    cilChevronDoubleDown,
-    cilTrash,
-    cilCursorMove,
-    cilPencil,
-} from '@coreui/icons'
 import { CButton } from '@coreui/react'
 import { Tab, Tabs, TabList, TabPanel } from 'react-tabs'
 import Seat from './Seat'
@@ -27,11 +17,9 @@ import { selectListChosen } from 'src/feature/booking/booking.slice'
 import { useDispatch } from 'react-redux'
 import { bookingActions } from 'src/feature/booking/booking.slice'
 import BookingForm from './BookingForm'
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { selectTripTicket } from 'src/feature/booking/booking.slice'
-import { listTicket } from './test/data'
-
-const SeatMap = ({ seatMap }) => {
+const SeatMap = ({ seatMap, activeTicket }) => {
     const dispatch = useDispatch()
     const listChosen = useSelector(selectListChosen)
     const getColWidth = () => {
@@ -40,23 +28,53 @@ const SeatMap = ({ seatMap }) => {
         else return '2'
     }
     const [showBookingForm, setShowBookingForm] = useState(false)
-
+    const [selectedTab, setSelectedTab] = useState(0)
     const cancelBooking = () => {
-        dispatch(bookingActions.reset())
+        dispatch(bookingActions.resetListChosen())
     }
-
-    // const listTicket = useSelector(selectTripTicket)
-
+    const activePosition = useRef('')
+    const listTicket = useSelector(selectTripTicket)
+    const [activeSeat, setActiveSeat] = useState(activeTicket ? activeTicket.seat : '')
     const handleShowBookingForm = (open) => {
         setShowBookingForm(open)
     }
+    const getSeatTicket = (seat) => {
+        return listTicket.filter((tk) => tk.seat === seat.name)[0]
+    }
+    useEffect(() => {
+        if (activeTicket && activeTicket.seat.includes('B')) setSelectedTab(1)
+        else setSelectedTab(0)
+    }, [])
+
+    const isActiveSeat = (seat) => {
+        const actSeat = getSeatTicket(seat)
+        if (activeTicket && actSeat)
+            if (activeTicket.id === actSeat.id) {
+                return true
+            }
+        return false
+    }
+
+    const handleChooseSeat = (seat) => {
+        if (activeSeat === seat) setActiveSeat('')
+        else setActiveSeat(seat)
+    }
+
+    useEffect(() => {
+        if (activePosition.current !== '') {
+            activePosition.current.scrollIntoView()
+        }
+    }, [])
 
     return (
         <>
             <CCard>
                 <CRow>
                     <div className={`tabStyle`}>
-                        <Tabs>
+                        <Tabs
+                            selectedIndex={selectedTab}
+                            onSelect={(index) => setSelectedTab(index)}
+                        >
                             <TabList>
                                 {Array.from(
                                     { length: seatMap.floorNo },
@@ -97,14 +115,17 @@ const SeatMap = ({ seatMap }) => {
                                                             >
                                                                 <Seat
                                                                     seat={seat}
-                                                                    ticket={
-                                                                        listTicket.filter(
-                                                                            (tk) =>
-                                                                                tk.seat ===
-                                                                                seat.name,
-                                                                        )[0]
-                                                                    }
+                                                                    ticket={getSeatTicket(seat)}
                                                                     empty={false}
+                                                                    isActive={
+                                                                        seat.name === activeSeat
+                                                                    }
+                                                                    ref={
+                                                                        isActiveSeat(seat)
+                                                                            ? activePosition
+                                                                            : null
+                                                                    }
+                                                                    chooseSeat={handleChooseSeat}
                                                                 />
                                                             </CCol>
                                                         ))

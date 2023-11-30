@@ -5,8 +5,6 @@ import {
     cilCalculator,
     cilChartPie,
     cilCursor,
-    cilDescription,
-    cilDrop,
     cilNotes,
     cilPencil,
     cilPuzzle,
@@ -46,8 +44,8 @@ const _nav = [
     },
     {
         component: CNavItem,
-        name: 'Typography',
-        to: '/theme/typography',
+        name: 'Duyệt hủy vé',
+        to: '/confirm-cancel',
         icon: <CIcon icon={cilPencil} customClassName="nav-icon" />,
     },
     {

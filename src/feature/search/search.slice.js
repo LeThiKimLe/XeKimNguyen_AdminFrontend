@@ -67,6 +67,9 @@ const searchSlice = createSlice({
                 state.result.listTrip = []
                 state.loading = false
             })
+            .addCase(searchThunk.getSameTrips.pending, (state, action) => {
+                state.loading = true
+            })
             .addCase(searchThunk.getSameTrips.fulfilled, (state, action) => {
                 const listSchedule = []
                 const trip = action.payload
@@ -78,10 +81,12 @@ const searchSlice = createSlice({
                     })
                 })
                 state.result.listTrip = listSchedule
+                state.loading = false
             })
             .addCase(searchThunk.getSameTrips.rejected, (state, action) => {
                 state.result.message = action.payload
                 state.result.listTrip = []
+                state.loading = false
             })
     },
 })

@@ -1,4 +1,5 @@
 import React from 'react'
+import CancelTicket from './views/searchTicket/action/CancelTicket'
 
 const Dashboard = React.lazy(() => import('./views/dashboard/Dashboard'))
 const Colors = React.lazy(() => import('./views/theme/colors/Colors'))
@@ -60,6 +61,9 @@ const Booking = React.lazy(() => import('./views/booking/Booking'))
 //Search ticket
 const SearchTicket = React.lazy(() => import('./views/searchTicket/SearchTicket'))
 
+//Request confirm
+const ConfirmCancel = React.lazy(() => import('./views/confirmCancel/ConfirmCancel'))
+
 const routes = [
     { path: '/', exact: true, name: 'Home' },
     { path: '/dashboard', name: 'Dashboard', element: Dashboard },
@@ -109,6 +113,7 @@ const routes = [
     { path: '/profile/change-password', name: 'Đổi mật khẩu', element: ChangePassword },
     { path: '/booking', name: 'Đặt vé', element: Booking },
     { path: '/search-ticket', name: 'Tìm vé', element: SearchTicket },
+    { path: '/confirm-cancel', name: 'Duyệt hủy vé', element: ConfirmCancel },
 ]
 
 export default routes

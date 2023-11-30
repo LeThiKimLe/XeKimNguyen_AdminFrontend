@@ -111,3 +111,10 @@ export const UPDATE_INFOR = [
         editable: [4],
     },
 ]
+
+export const COLOR_STATE = {
+    success: 'green',
+    pending: '#9a9a0f',
+    cancel: 'red',
+    info: 'blue',
+}

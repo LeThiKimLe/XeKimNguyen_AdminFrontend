@@ -6,6 +6,10 @@ const initialState = {
     listTripTicket: [],
     listChosenTicket: [],
     loading: false,
+    isBooking: false,
+    listBooker: [],
+    isAdjusting: false,
+    isChanging: null,
 }
 
 const bookingSlice = createSlice({
@@ -23,8 +27,31 @@ const bookingSlice = createSlice({
                 )
             else state.listChosenTicket = [...state.listChosenTicket, inTicket]
         },
-        reset: (state) => {
+        resetListChosen: (state) => {
             state.listChosenTicket = []
+        },
+        resetAll: (state) => {
+            state.currentTrip = null
+            state.listTripTicket = []
+            state.listChosenTicket = []
+            state.loading = false
+            state.listBooker = []
+        },
+        setBooking: (state, action) => {
+            state.isBooking = action.payload
+        },
+        addBooker: (state, action) => {
+            state.listBooker = [...state.listBooker, action.payload]
+        },
+        setAdjust: (state, action) => {
+            state.isAdjusting = action.payload
+        },
+        clearBooker: (state) => {
+            state.listBooker = []
+        },
+        setChange: (state, action) => {
+            const booking = action.payload
+            state.isChanging = booking
         },
     },
     extraReducers: (builder) => {
@@ -67,5 +94,8 @@ export const selectListChosen = (state) => state.booking.listChosenTicket
 export const selectCurrentTrip = (state) => state.booking.currentTrip
 export const selectLoading = (state) => state.booking.loading
 export const selectTripTicket = (state) => state.booking.listTripTicket
-
+export const selectBookingState = (state) => state.booking.isBooking
+export const selectListBooker = (state) => state.booking.listBooker
+export const selectAdjustState = (state) => state.booking.isAdjusting
+export const selectChangeState = (state) => state.booking.isChanging
 export default bookingSlice.reducer

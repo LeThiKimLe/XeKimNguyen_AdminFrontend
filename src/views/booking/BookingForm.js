@@ -73,8 +73,21 @@ const BookingForm = ({ visible, handleShow }) => {
                 .unwrap()
                 .then(() => {
                     addToast(() => CustomToast({ message: 'Đặt chỗ thành công', type: 'success' }))
-                    handleShow(false)
-                    dispatch(bookingActions.reset())
+                    setTimeout(() => {
+                        dispatch(bookingThunk.getScheduleInfor(currentTrip.id))
+                            .unwrap()
+                            .then(() => {
+                                handleShow(false)
+                                dispatch(bookingActions.resetListChosen())
+                            })
+                            .catch((error) => {})
+                        dispatch(searchThunk.getTrips(searchInfor))
+                            .unwrap()
+                            .then(() => {})
+                            .catch((error) => {
+                                addToast(() => CustomToast({ message: error, type: 'error' }))
+                            })
+                    }, 1000)
                 })
                 .catch((error) => {
                     addToast(() => CustomToast({ message: error, type: 'error' }))
@@ -104,6 +117,10 @@ const BookingForm = ({ visible, handleShow }) => {
             bookedSeat: listChosen,
         })
     }, [listChosen])
+    useEffect(() => {
+        if (visible) dispatch(bookingActions.setBooking(true))
+        else dispatch(bookingActions.setBooking(false))
+    }, [visible])
     return (
         <>
             <CToaster ref={toaster} push={toast} placement="top-end" />

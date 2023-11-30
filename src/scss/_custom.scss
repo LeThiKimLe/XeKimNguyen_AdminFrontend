@@ -27,3 +27,30 @@ $border-color_1: var(--primary-color);
         border-color: $border-color_1;
     }
 }
+
+.ticketTabs {
+    .react-tabs__tab-list {
+        width: 60%;
+        margin: 0 auto 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding-left: 0px;
+        list-style: none;
+        gap: 30px;
+    }
+    .react-tabs__tab {
+        text-align: center;
+        flex: 1;
+        padding: 10px 0;
+        border-bottom: 2px solid white;
+        font-weight: 700;
+        cursor: pointer;
+    }
+    .react-tabs__tab:hover {
+        background-color: #ccc;
+    }
+    .react-tabs__tab--selected {
+        border-color: $border-color_1;
+    }
+}

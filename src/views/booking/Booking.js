@@ -6,17 +6,20 @@ import routeThunk from 'src/feature/route/route.service'
 import { selectLoadingState } from 'src/feature/route/route.slice'
 import { useDispatch } from 'react-redux'
 import { useSelector } from 'react-redux'
-import { selectLoading } from 'src/feature/auth/auth.slice'
 import { CSpinner } from '@coreui/react'
+import { bookingActions } from 'src/feature/booking/booking.slice'
 import { useState, useEffect } from 'react'
-
+import { selectListRoute } from 'src/feature/route/route.slice'
+import { selectSearchInfor } from 'src/feature/search/search.slice'
 const Booking = () => {
     const dispatch = useDispatch()
-    const loading = useSelector(selectLoading)
+    const loading = useSelector(selectLoadingState)
     const [gotRoute, setGotRoute] = useState(false)
+    const listRoute = useSelector(selectListRoute)
     useEffect(() => {
         const loadData = () => {
             dispatch(routeThunk.getRoute())
+                .unwrap()
                 .then(() => {
                     setGotRoute(true)
                 })
@@ -25,12 +28,15 @@ const Booking = () => {
                     setGotRoute(false)
                 })
         }
-        loadData()
+        if (listRoute.length === 0) loadData()
+        else setGotRoute(true)
+        // return () => {
+        //     dispatch(bookingActions.resetAll())
+        // }
     }, [])
-
     return (
-        <CForm>
-            {!loading && gotRoute ? (
+        <CRow>
+            {!loading && gotRoute === true && (
                 <>
                     <CRow>
                         <SearchArea></SearchArea>
@@ -39,12 +45,18 @@ const Booking = () => {
                         <ListTrip></ListTrip>
                     </CRow>
                 </>
-            ) : (
+            )}
+            {loading && (
                 <div className="d-flex justify-content-center">
                     <CSpinner />
                 </div>
             )}
-        </CForm>
+            {!loading && gotRoute === false && (
+                <div className="d-flex justify-content-center">
+                    <h3>Đang tải dữ liệu ...</h3>
+                </div>
+            )}
+        </CRow>
     )
 }
 

@@ -16,7 +16,6 @@ import {
 } from '@coreui/react'
 import React from 'react'
 import { useSelector } from 'react-redux'
-import { selectCurrentBooking, selectListTicket } from 'src/feature/ticket/ticket.slice'
 import { convertToDisplayDate } from 'src/utils/convertUtils'
 import { getBookingTrip, getTripDeparture, getTripDestination } from 'src/utils/tripUtils'
 import { selectUser } from 'src/feature/auth/auth.slice'
@@ -40,8 +39,7 @@ const InforUnit = ({ title, value }) => {
         </>
     )
 }
-const BoardingPass = ({ ticket }) => {
-    const booking = useSelector(selectCurrentBooking)
+const BoardingPass = ({ ticket, booking }) => {
     const user = useSelector(selectUser)
     return (
         <CCard id={ticket.id} className="mb-3">
@@ -55,7 +53,11 @@ const BoardingPass = ({ ticket }) => {
                 <CCardSubtitle style={{ textAlign: 'center' }}>
                     {getBookingTrip(booking)}
                 </CCardSubtitle>
-                <CCardText style={{ textAlign: 'center' }}>Số xe: 79C-809001</CCardText>
+                {ticket.schedule.bus && (
+                    <CCardText style={{ textAlign: 'center' }}>
+                        Số xe: {ticket.schedule.bus.licensePlate}
+                    </CCardText>
+                )}
                 <CRow>
                     <CCol xs="8">
                         <InforUnit
@@ -103,13 +105,12 @@ const BoardingPass = ({ ticket }) => {
     )
 }
 
-const ExportTicket = ({ visible, setVisible }) => {
-    const listChosen = useSelector(selectListTicket)
+const ExportDialog = ({ booking, listTicket, visible, setVisible }) => {
     const downloadBill = (id) => {
         const qrCodeContainer = document.getElementById(id)
         html2canvas(qrCodeContainer).then((canvas) => {
             const link = document.createElement('a')
-            link.download = 'bill.png'
+            link.download = `ticket_${id}.png`
             link.href = canvas.toDataURL()
             link.click()
         })
@@ -124,9 +125,10 @@ const ExportTicket = ({ visible, setVisible }) => {
     }
     const openView = async () => {
         const printElement = document.createElement('div')
-        listChosen.forEach((tk) => {
+        listTicket.forEach((tk) => {
             const elementImage = getImage(tk.id)
             printElement.appendChild(elementImage)
+            downloadBill(tk.id)
         })
         const win = window.open('', `Xuất vé ${new Date().getTime()}`)
         win.document.body.appendChild(printElement)
@@ -137,22 +139,22 @@ const ExportTicket = ({ visible, setVisible }) => {
             alignment="center"
             scrollable
             visible={visible}
-            onClose={() => setVisible(false)}
+            onClose={setVisible}
         >
             <CModalHeader>
                 <CModalTitle>Xuất vé</CModalTitle>
             </CModalHeader>
             <CModalBody>
                 <CRow>
-                    {listChosen.map((tk) => (
+                    {listTicket.map((tk) => (
                         <CCol xs="12" key={tk.id}>
-                            <BoardingPass ticket={tk}></BoardingPass>
+                            <BoardingPass ticket={tk} booking={booking}></BoardingPass>
                         </CCol>
                     ))}
                 </CRow>
             </CModalBody>
             <CModalFooter>
-                <CButton color="secondary" onClick={() => setVisible(false)}>
+                <CButton color="secondary" onClick={setVisible}>
                     Đóng
                 </CButton>
                 <CButton color="primary" onClick={openView}>
@@ -162,4 +164,4 @@ const ExportTicket = ({ visible, setVisible }) => {
         </CModal>
     )
 }
-export default ExportTicket
+export default ExportDialog

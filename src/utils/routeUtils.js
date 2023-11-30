@@ -71,3 +71,23 @@ const addRoute = (route, round) => {
         addKeyPair()
     }
 }
+
+export const getDesandDep = (listRoute, depName, desName) => {
+    const { listDeparture, listDestination } = createListRoutes(listRoute)
+    const depOptions = listDeparture.map((dep) => {
+        return { value: dep.key, label: dep.location.name }
+    })
+    const departure = depOptions.filter((option) => option.label === depName)[0]
+    const desOptions = departure
+        ? listDestination
+              .filter((des) => des.key === departure.value)[0]
+              .location.map((des) => {
+                  return {
+                      value: { id: des.routeId, turn: des.round },
+                      label: des.destination.name,
+                  }
+              })
+        : []
+    const destination = desOptions.filter((option) => option.label === desName)[0]
+    return { departure, destination }
+}

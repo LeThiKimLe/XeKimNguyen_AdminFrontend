@@ -25,6 +25,8 @@ import Select from 'react-select'
 import 'react-datepicker/dist/react-datepicker.css'
 import CIcon from '@coreui/icons-react'
 import { cilSearch } from '@coreui/icons'
+import { selectChangeState } from 'src/feature/booking/booking.slice'
+import { selectCurrentTrip } from 'src/feature/booking/booking.slice'
 
 const SearchArea = () => {
     const listRoute = useSelector(selectListRoute)
@@ -37,6 +39,8 @@ const SearchArea = () => {
     const [toast, addToast] = useState(0)
     const today = new Date()
     const twoMonthsLater = new Date()
+    const isChanging = useSelector(selectChangeState)
+    const currentTrip = useSelector(selectCurrentTrip)
     twoMonthsLater.setMonth(today.getMonth() + 2)
     const depOptions = listDeparture.map((dep) => {
         return { value: dep.key, label: dep.location.name }
@@ -98,21 +102,34 @@ const SearchArea = () => {
     }
 
     const handleSearch = () => {
-        if (currentInfor.searchRoute) {
-            dispatch(searchAction.setSearch(currentInfor))
-            dispatch(searchThunk.getTrips(currentInfor))
+        if (isChanging === null)
+            if (currentInfor.searchRoute) {
+                dispatch(searchAction.setSearch(currentInfor))
+                dispatch(searchThunk.getTrips(currentInfor))
+                    .unwrap()
+                    .then(() => {})
+                    .catch((error) => {
+                        addToast(() => CustomToast({ message: error, type: 'error' }))
+                    })
+            } else {
+                addToast(() =>
+                    CustomToast({ message: 'Hãy chọn đủ điểm đi và điểm đến', type: 'info' }),
+                )
+            }
+        else {
+            dispatch(
+                searchThunk.getSameTrips({
+                    tripId: isChanging.trip.id,
+                    departDate: currentInfor.departDate,
+                }),
+            )
                 .unwrap()
                 .then(() => {})
                 .catch((error) => {
                     addToast(() => CustomToast({ message: error, type: 'error' }))
                 })
-        } else {
-            addToast(() =>
-                CustomToast({ message: 'Hãy chọn đủ điểm đi và điểm đến', type: 'info' }),
-            )
         }
     }
-
     useEffect(() => {
         if (currentInfor.desLocation) {
             const selectedTrip = listRoute.filter(
@@ -125,7 +142,6 @@ const SearchArea = () => {
             })
         }
     }, [currentInfor.desLocation])
-    console.log(currentInfor)
     return (
         <>
             <CToaster push={toast} placement="top-end" />
@@ -139,6 +155,7 @@ const SearchArea = () => {
                             value={currentInfor.departLocation}
                             onChange={handleOriginPlace}
                             placeholder="Chọn điểm đi"
+                            isDisabled={isChanging !== null}
                         ></Select>
                     </CCol>
                     <CCol md="3">
@@ -149,6 +166,7 @@ const SearchArea = () => {
                             onFocus={checkOrigin}
                             onChange={handleDesPlace}
                             placeholder="Chọn điểm đến"
+                            isDisabled={isChanging !== null}
                         ></Select>
                     </CCol>
                     <CCol md="2">
@@ -169,6 +187,7 @@ const SearchArea = () => {
                             type="number"
                             value={quantity}
                             onChange={handleQuantityChange}
+                            disabled={isChanging != null}
                         />
                     </CCol>
                     <CCol md="2" className="d-flex justify-content-center align-items-end p-1">

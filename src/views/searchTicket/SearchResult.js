@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import {
     CCollapse,
     CCard,
@@ -15,7 +15,7 @@ import { useState } from 'react'
 import { getDate, convertToDisplayDate } from 'src/utils/convertUtils'
 import { useSelector } from 'react-redux'
 import { selectListBooking } from 'src/feature/ticket/ticket.slice'
-import { listBooking } from './test/data'
+// import { listBooking } from './test/data'
 
 const BookingSum = ({ booking, handleChoose }) => {
     const compareByTime = (a, b) => {
@@ -54,7 +54,7 @@ const BookingSum = ({ booking, handleChoose }) => {
     )
 }
 const SearchResult = ({ visible, handleChoose }) => {
-    // const listBooking = useSelector(selectListBooking)
+    const listBooking = useSelector(selectListBooking)
     const isDue = (ticket) => {
         const departTime = getDate(ticket.schedule.departDate, ticket.schedule.departTime)
         const today = new Date()
@@ -72,23 +72,33 @@ const SearchResult = ({ visible, handleChoose }) => {
         )
     }
     const [filterList, setFilterList] = useState(filterBooking())
+    useEffect(() => {
+        setFilterList(filterBooking())
+    }, [listBooking])
     return (
-        <CCollapse visible={visible}>
-            <CCard className="mt-0">
+        <CCollapse visible={visible} className="mb-2">
+            <CCard className="mt-0" style={{ maxHeight: '300px', overflow: 'auto' }}>
                 <CCardHeader>
-                    <b>Kết quả tìm kiếm</b>
+                    <b>Các lần đặt vé</b>
                 </CCardHeader>
                 <CCardBody>
-                    <CListGroup>
-                        {filterList.map((booking) => (
-                            <CListGroupItem key={booking.code} component="button">
-                                <BookingSum
-                                    booking={booking}
-                                    handleChoose={handleChoose}
-                                ></BookingSum>
-                            </CListGroupItem>
-                        ))}
-                    </CListGroup>
+                    {filterList.length !== 0 && (
+                        <CListGroup>
+                            {filterList.map((booking, index) => (
+                                <CListGroupItem
+                                    key={booking.code}
+                                    component="button"
+                                    color={index % 2 === 0 ? 'info' : 'white'}
+                                >
+                                    <BookingSum
+                                        booking={booking}
+                                        handleChoose={handleChoose}
+                                    ></BookingSum>
+                                </CListGroupItem>
+                            ))}
+                        </CListGroup>
+                    )}
+                    {filterList.length === 0 && <h3>Không tìm thấy dữ liệu</h3>}
                 </CCardBody>
             </CCard>
         </CCollapse>

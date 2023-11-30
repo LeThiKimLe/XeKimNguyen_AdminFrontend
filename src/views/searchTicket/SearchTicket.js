@@ -1,6 +1,5 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { useState, useRef } from 'react'
-import axiosClient from 'src/api/adminAxios'
 import {
     CForm,
     CRow,
@@ -13,16 +12,23 @@ import {
     CDropdownItem,
     CDropdownMenu,
     CToaster,
+    CButton,
+    CCollapse,
+    CCard,
 } from '@coreui/react'
 import CustomButton from '../customButton/CustomButton'
 import CIcon from '@coreui/icons-react'
-import { cilSearch } from '@coreui/icons'
+import { cilSearch, cilCaretBottom } from '@coreui/icons'
 import SearchResult from './SearchResult'
 import { useDispatch } from 'react-redux'
 import { ticketActions } from 'src/feature/ticket/ticket.slice'
 import TicketDetail from './TicketDetail'
 import { useSelector } from 'react-redux'
-import { selectListTicket, selectCurrentBooking } from 'src/feature/ticket/ticket.slice'
+import {
+    selectListTicket,
+    selectCurrentBooking,
+    selectListBooking,
+} from 'src/feature/ticket/ticket.slice'
 import ExportTicket from './action/ExportTicket'
 import CancelTicket from './action/CancelTicket'
 import ticketThunk from 'src/feature/ticket/ticket.service'
@@ -36,6 +42,7 @@ const SearchTicket = () => {
     const [showExport, setShowExport] = useState(false)
     const [showCancel, setShowCancel] = useState(false)
     const currentBooking = useSelector(selectCurrentBooking)
+    const listBooking = useSelector(selectListBooking)
     const loading = useSelector(selectLoading)
     const [toast, addToast] = useState('')
     const toaster = useRef('')
@@ -48,32 +55,22 @@ const SearchTicket = () => {
         if (listChosenTicket !== null) dispatch(ticketActions.resetTicket())
     }
     const handleSearch = async () => {
-        setSearchView(true)
-        // dispatch(ticketThunk.searchTicket(tel))
-        //     .unwrap()
-        //     .then(() => {
-        //         setSearchView(true)
-        //     })
-        //     .catch((error) => {
-        //         addToast(() => CustomToast({ message: error, type: 'success' }))
-        //     })
-        // try {
-        //     const response = await axiosClient.get('locations')
-        //     console.log(response)
-        // } catch (error) {
-        //     const message =
-        //         (error.response && error.response.data && error.response.data.message) ||
-        //         error.message ||
-        //         error.toString()
-        //     console.log(message)
-        // }
+        dispatch(ticketThunk.searchTicket(tel))
+            .unwrap()
+            .then(() => {
+                setSearchView(true)
+            })
+            .catch((error) => {
+                addToast(() => CustomToast({ message: error, type: 'error' }))
+            })
     }
     const handleExportTicket = (e) => {
         e.preventDefault()
         dispatch(ticketThunk.exportTicket(currentBooking.code))
             .unwrap()
-            .then(() => {
+            .then((res) => {
                 setShowExport(true)
+                dispatch(ticketActions.setCurrentBooking(res))
             })
             .catch((error) => {
                 console.log(error)
@@ -84,6 +81,11 @@ const SearchTicket = () => {
         dispatch(ticketActions.setCurrentBooking(booking))
         setTicketView(true)
     }
+    useEffect(() => {
+        return () => {
+            dispatch(ticketActions.resetTicket())
+        }
+    }, [])
     return (
         <>
             <CToaster ref={toaster} push={toast} placement="top-end" />
@@ -152,6 +154,18 @@ const SearchTicket = () => {
                     )}
                 </CRow>
             </CForm>
+            {listBooking.length !== 0 && (
+                <CCollapse visible={!searchView} role="button" onClick={() => setSearchView(true)}>
+                    <CCard className="p-3 mb-2">
+                        <CRow>
+                            <CCol className="d-flex align-items-center gap-2">
+                                <strong>Danh sách các lần đặt vé</strong>
+                                <CIcon icon={cilCaretBottom} color="dark"></CIcon>
+                            </CCol>
+                        </CRow>
+                    </CCard>
+                </CCollapse>
+            )}
             <SearchResult visible={searchView} handleChoose={handleChooseBooking}></SearchResult>
             <TicketDetail visible={ticketView}></TicketDetail>
             <ExportTicket visible={showExport} setVisible={setShowExport}></ExportTicket>

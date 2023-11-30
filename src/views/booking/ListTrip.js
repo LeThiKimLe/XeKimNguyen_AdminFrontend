@@ -9,16 +9,29 @@ import SeatMap from './SeatMap'
 import TripDetail from './TripDetail'
 import { useDispatch } from 'react-redux'
 import { bookingActions } from 'src/feature/booking/booking.slice'
-import { selectCurrentTrip } from 'src/feature/booking/booking.slice'
-import { selectLoading } from 'src/feature/auth/auth.slice'
+import {
+    selectCurrentTrip,
+    selectLoading as LoadingBook,
+    selectBookingState,
+    selectAdjustState,
+    selectChangeState,
+} from 'src/feature/booking/booking.slice'
 import bookingThunk from 'src/feature/booking/booking.service'
 import { CSpinner } from '@coreui/react'
-
+import { selectActiveTicket, ticketActions } from 'src/feature/ticket/ticket.slice'
+import { selectLoading as LoadingSearch } from 'src/feature/search/search.slice'
+import ChangeTicket from './ChangeTicket'
+import axios from 'axios'
 const ListTrip = () => {
     const dispatch = useDispatch()
     const searchResult = useSelector(selectRearchResult)
     const currentTrip = useSelector(selectCurrentTrip)
-    const loading = useSelector(selectLoading)
+    const loadingBook = useSelector(LoadingBook)
+    const loadingSearch = useSelector(LoadingSearch)
+    const activeTicket = useSelector(selectActiveTicket)
+    const isBooking = useSelector(selectBookingState)
+    const isAdjusting = useSelector(selectAdjustState)
+    const isChanging = useSelector(selectChangeState)
     const handleSelectTrip = (trip) => {
         if (currentTrip && currentTrip.id === trip.id) dispatch(bookingActions.setCurrentTrip(null))
         else {
@@ -29,23 +42,33 @@ const ListTrip = () => {
                 .catch((error) => {})
         }
     }
+    const getActiveTicket = () => {
+        if (currentTrip && activeTicket)
+            if (activeTicket.schedule.id === currentTrip.id) return activeTicket.ticket
+        return null
+    }
     useEffect(() => {
-        dispatch(bookingActions.reset())
+        dispatch(bookingActions.resetListChosen())
     }, [currentTrip])
-
     useEffect(() => {
-        dispatch(
-            bookingActions.setCurrentTrip(
-                searchResult.filter((trip) => trip.id === currentTrip.id)[0],
-            ),
-        )
+        if (currentTrip)
+            dispatch(
+                bookingActions.setCurrentTrip(
+                    searchResult.filter((trip) => trip.id === currentTrip.id)[0],
+                ),
+            )
     }, searchResult)
-
+    useEffect(() => {
+        if (isChanging === null) {
+            dispatch(ticketActions.clearSource())
+            dispatch(ticketActions.clearTarget())
+        }
+    }, [isChanging])
     console.log(currentTrip)
     return (
         <>
-            {searchResult.length > 0 && (
-                <CContainer className="my-3">
+            {!loadingSearch && searchResult.length > 0 && (
+                <CContainer className="my-3 position-relative">
                     <div className="d-flex gap-3 overflow-auto">
                         {searchResult.map((trip) => (
                             <div key={trip.id}>
@@ -64,22 +87,35 @@ const ListTrip = () => {
                     </CRow>
                     <CRow>
                         <CCollapse visible={currentTrip !== null}>
-                            {currentTrip && loading === false && (
+                            {((currentTrip && loadingBook === false) ||
+                                isBooking ||
+                                isAdjusting) && (
                                 <CCard>
                                     <SeatMap
                                         seatMap={currentTrip.tripInfor.route.busType.seatMap}
+                                        activeTicket={getActiveTicket()}
                                     ></SeatMap>
                                 </CCard>
                             )}
-                            {loading === true && (
-                                <div className="d-flex justify-content-center">
-                                    <CSpinner />
-                                </div>
+                            {!isAdjusting && !isBooking && loadingBook === true && (
+                                <CCard className="p-3 text-center">
+                                    <div className="d-flex justify-content-center">
+                                        <CSpinner />
+                                    </div>
+                                </CCard>
                             )}
                         </CCollapse>
                     </CRow>
                 </CContainer>
             )}
+            {loadingSearch && (
+                <CCard className="p-3 text-center">
+                    <div className="d-flex justify-content-center">
+                        <CSpinner />
+                    </div>
+                </CCard>
+            )}
+            {isChanging && <ChangeTicket></ChangeTicket>}
         </>
     )
 }

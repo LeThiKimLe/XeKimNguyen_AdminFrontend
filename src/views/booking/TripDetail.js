@@ -36,7 +36,7 @@ const TripDetail = ({ currentTrip }) => {
                             <CCol sm={8}>
                                 <CFormInput
                                     type="text"
-                                    value={getStartStation()}
+                                    value={getStartStation(currentTrip)}
                                     readOnly
                                     plainText
                                 />
@@ -49,7 +49,7 @@ const TripDetail = ({ currentTrip }) => {
                             <CCol sm={8}>
                                 <CFormInput
                                     type="text"
-                                    value={getEndStation()}
+                                    value={getEndStation(currentTrip)}
                                     readOnly
                                     plainText
                                 />

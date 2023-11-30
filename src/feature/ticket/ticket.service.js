@@ -1,5 +1,5 @@
 import { createAsyncThunk } from '@reduxjs/toolkit'
-import axiosClient from 'src/api/staffAxios'
+import axiosClient from 'src/api/axios'
 
 const getTicketCancelRequest = createAsyncThunk(
     'staff/tickets/request-cancel',

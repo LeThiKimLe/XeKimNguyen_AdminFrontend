@@ -28,22 +28,80 @@ import { ticketActions } from 'src/feature/ticket/ticket.slice'
 import { searchAction } from 'src/feature/search/search.slice'
 import { selectListRoute } from 'src/feature/route/route.slice'
 import format from 'date-fns/format'
+import { getDesandDep } from 'src/utils/routeUtils'
+import { bookingActions } from 'src/feature/booking/booking.slice'
+import searchThunk from 'src/feature/search/search.service'
+import routeThunk from 'src/feature/route/route.service'
+import { useNavigate } from 'react-router-dom'
+import bookingThunk from 'src/feature/booking/booking.service'
 const TicketDetail = ({ visible }) => {
+    const navigate = useNavigate()
     const booking = useSelector(selectCurrentBooking)
     const dispatch = useDispatch()
     const handleChooseTicket = (ticket) => {
         dispatch(ticketActions.setTicket(ticket))
     }
     const listChosen = useSelector(selectListTicket)
+    const listRoute = useSelector(selectListRoute)
     const getColorState = (state) => {
-        if (state === 'Đã thanh toán') return 'success'
-        else if (state === 'Chờ thanh toán') return 'warning'
-        else return 'danger'
+        if (state === 'Đã thanh toán') return 'green'
+        else if (state === 'Chờ thanh toán') return 'yello'
+        else return 'red'
     }
-    const handleSetPosition = (ticket) => {
-        const currentInfor = {
-            infor: 1,
+    const handleSetPosition = (e, ticket) => {
+        e.preventDefault()
+        var listRoutes = listRoute
+        if (listRoute.length === 0) {
+            dispatch(routeThunk.getRoute())
+                .unwrap()
+                .then((res) => {
+                    listRoutes = res
+                })
+                .catch((error) => {})
         }
+        const { departure, destination } = getDesandDep(
+            listRoutes,
+            booking.trip.route.departure.name,
+            booking.trip.route.destination.name,
+        )
+        const currentInfor = {
+            arrivalDate: format(new Date(), 'dd/MM/yyyy'),
+            departDate: format(new Date(ticket.schedule.departDate), 'dd/MM/yyyy'),
+            departLocation: departure,
+            desLocation: destination,
+            numberTicket: 0,
+            searchRoute: booking.trip.route,
+            oneway: true,
+            turn: booking.trip.turn,
+        }
+        dispatch(searchAction.setSearch(currentInfor))
+        dispatch(searchThunk.getTrips(currentInfor))
+            .unwrap()
+            .then((res) => {
+                const listSchedule = []
+                res.forEach((trip) => {
+                    const { schedules, ...tripInfor } = trip
+                    schedules.forEach((schedule) => {
+                        listSchedule.push({
+                            ...schedule,
+                            tripInfor: tripInfor,
+                        })
+                    })
+                })
+                const curTrip = listSchedule.filter((trip) => trip.id === ticket.schedule.id)[0]
+                dispatch(bookingActions.setCurrentTrip(curTrip))
+                dispatch(bookingThunk.getScheduleInfor(curTrip.id))
+                    .unwrap()
+                    .then(() => {})
+                    .catch((error) => {})
+            })
+            .catch((error) => {
+                console.log(error)
+            })
+        dispatch(
+            ticketActions.setCurrentActiveTicket({ schedule: ticket.schedule, ticket: ticket }),
+        )
+        navigate('/booking', { replace: true })
     }
     return (
         <CCollapse visible={visible}>
@@ -167,10 +225,22 @@ const TicketDetail = ({ visible }) => {
                                             />
                                         </CCol>
                                     </CRow>
+                                    {booking.ticketing === true ? (
+                                        <CFormLabel htmlFor="validationCustom01">
+                                            <strong style={{ color: 'green' }}> Đã xuất vé </strong>
+                                        </CFormLabel>
+                                    ) : (
+                                        <CFormLabel htmlFor="validationCustom01">
+                                            <strong style={{ color: 'grey' }}>
+                                                {' '}
+                                                Chưa xuất vé{' '}
+                                            </strong>
+                                        </CFormLabel>
+                                    )}
                                     <CRow className="mt-2">
                                         <CFormLabel htmlFor="validationCustom01">Các vé</CFormLabel>
                                         {booking.tickets.map((tk) => (
-                                            <CCol key={tk.id} xs="4">
+                                            <CCol key={tk.id} xs="4" className="mb-2">
                                                 <CCard>
                                                     <CCardBody>
                                                         <CFormCheck
@@ -194,21 +264,29 @@ const TicketDetail = ({ visible }) => {
                                                                 )}`}
                                                             </strong>
                                                         </CFormText>
-                                                        <CFormText color={getColorState(tk.state)}>
+                                                        <CFormText
+                                                            style={{
+                                                                color: getColorState(tk.state),
+                                                            }}
+                                                        >
                                                             {tk.state}
                                                         </CFormText>
                                                     </CCardBody>
                                                     <CCardFooter style={{ textAlign: 'center' }}>
-                                                        <NavLink
-                                                            to={'/booking'}
-                                                            onClick={handleSetPosition}
-                                                        >
-                                                            Xem vị trí
-                                                            <CIcon
-                                                                icon={cilCursor}
-                                                                style={{ marginLeft: '5px' }}
-                                                            ></CIcon>
-                                                        </NavLink>
+                                                        {tk.state !== 'Đã hủy' && (
+                                                            <NavLink
+                                                                // to="/booking"
+                                                                onClick={(e) =>
+                                                                    handleSetPosition(e, tk)
+                                                                }
+                                                            >
+                                                                Xem vị trí
+                                                                <CIcon
+                                                                    icon={cilCursor}
+                                                                    style={{ marginLeft: '5px' }}
+                                                                ></CIcon>
+                                                            </NavLink>
+                                                        )}
                                                     </CCardFooter>
                                                 </CCard>
                                             </CCol>
