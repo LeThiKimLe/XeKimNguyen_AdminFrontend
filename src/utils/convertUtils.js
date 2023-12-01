@@ -55,3 +55,6 @@ export const getDate = (date, time) => {
     const dateTimeString = date + 'T' + time
     return new Date(Date.parse(dateTimeString))
 }
+export const convertToDisplayTimeStamp = (datetime) => {
+    return format(new Date(datetime), 'HH:mm - dd/MM/yyyy')
+}

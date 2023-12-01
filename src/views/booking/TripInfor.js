@@ -1,8 +1,10 @@
 import React from 'react'
 import { CCard, CCardBody, CCardTitle, CCardText } from '@coreui/react'
 import { useState } from 'react'
+import { selectChangeState } from 'src/feature/booking/booking.slice'
+import { useSelector } from 'react-redux'
 
-const TripInfor = ({ trip, selected, setActive }) => {
+const TripInfor = ({ trip, selected, setActive, disabled, noChoose }) => {
     const handleChooseTrip = () => {
         setActive(trip)
     }
@@ -17,7 +19,8 @@ const TripInfor = ({ trip, selected, setActive }) => {
                     }`}
                 style={{ width: '130px' }}
                 role="button"
-                onClick={handleChooseTrip}
+                color={disabled === true ? 'secondary' : ''}
+                onClick={disabled === true ? noChoose : handleChooseTrip}
             >
                 <CCardBody>
                     <CCardTitle>{trip.departTime.slice(0, -3)}</CCardTitle>

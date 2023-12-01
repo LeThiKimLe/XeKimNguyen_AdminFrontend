@@ -39,7 +39,9 @@ const SeatMap = ({ seatMap, activeTicket }) => {
         setShowBookingForm(open)
     }
     const getSeatTicket = (seat) => {
-        return listTicket.filter((tk) => tk.seat === seat.name)[0]
+        return listTicket.filter(
+            (tk) => tk.seat === seat.name && tk.state !== 'Đã hủy' && tk.state !== 'Chờ hủy',
+        )[0]
     }
     useEffect(() => {
         if (activeTicket && activeTicket.seat.includes('B')) setSelectedTab(1)
@@ -65,7 +67,6 @@ const SeatMap = ({ seatMap, activeTicket }) => {
             activePosition.current.scrollIntoView()
         }
     }, [])
-
     return (
         <>
             <CCard>

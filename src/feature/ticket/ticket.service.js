@@ -83,11 +83,13 @@ const verifyCancelTicketPolicy = createAsyncThunk(
 )
 
 const editTicket = createAsyncThunk(
-    'tickets/edit',
-    async ({ bookingCode, pickStationId, dropStationId }, thunkAPI) => {
+    'staff/tickets/edit',
+    async ({ bookingCode, name, tel, pickStationId, dropStationId }, thunkAPI) => {
         try {
-            const response = await axiosClient.put('tickets/edit', {
+            const response = await axiosClient.put('staff/tickets/edit', {
                 bookingCode: bookingCode,
+                name: name,
+                tel: tel,
                 pickStationId: pickStationId,
                 dropStationId: dropStationId,
             })

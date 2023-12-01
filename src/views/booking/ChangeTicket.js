@@ -8,6 +8,7 @@ import {
     CCol,
     CRow,
     CToaster,
+    CButton,
 } from '@coreui/react'
 import React, { useEffect, useRef, useState } from 'react'
 import { useSelector } from 'react-redux'
@@ -25,6 +26,7 @@ import { selectCurrentTrip } from 'src/feature/booking/booking.slice'
 import CustomButton from '../customButton/CustomButton'
 import { selectLoading } from 'src/feature/ticket/ticket.slice'
 import ticketThunk from 'src/feature/ticket/ticket.service'
+import bookingThunk from 'src/feature/booking/booking.service'
 const ChangeTicket = () => {
     const listSource = useSelector(selectListSource)
     const listTarget = useSelector(selectListTarget)
@@ -68,11 +70,18 @@ const ChangeTicket = () => {
                 addToast(() => CustomToast({ message: 'Đã đổi vé thành công', type: 'success' }))
                 setTimeout(() => {
                     dispatch(bookingActions.setChange(null))
+                    dispatch(bookingThunk.getScheduleInfor(listTarget.schedule.id))
+                        .unwrap()
+                        .then(() => {})
+                        .catch((error) => {})
                 }, 1000)
             })
             .catch((error) => {
                 addToast(() => CustomToast({ message: error, type: 'error' }))
             })
+    }
+    const closeChangeDialog = () => {
+        dispatch(bookingActions.setChange(null))
     }
     useEffect(() => {
         return () => {
@@ -97,12 +106,21 @@ const ChangeTicket = () => {
                             <CCol>
                                 <strong>{`Đổi vé: Chuyến ${getBookingTrip(isChanging)}`}</strong>
                             </CCol>
-                            <CCol style={{ textAlign: 'right' }}>
+                            <CCol style={{ textAlign: 'right' }} className="d-flex-end gap-1">
+                                <CButton
+                                    style={{ marginRight: '10px' }}
+                                    variant="outline"
+                                    color="danger"
+                                    onClick={closeChangeDialog}
+                                >
+                                    Hủy
+                                </CButton>
                                 <CustomButton
                                     color="success"
                                     disabled={!changeAllow}
                                     text="Đổi vé"
                                     onClick={changeTicket}
+                                    loading={loading}
                                 ></CustomButton>
                             </CCol>
                         </CRow>
