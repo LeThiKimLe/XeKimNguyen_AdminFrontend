@@ -7,7 +7,7 @@ const getTrips = createAsyncThunk('search/trip', async (searchInfor, thunkAPI) =
         const response = await axiosClient.get('trips', {
             params: {
                 routeId: searchInfor.searchRoute.id,
-                availability: searchInfor.numberTicket,
+                availability: 0,
                 departDate: format(
                     parse(searchInfor.departDate, 'dd/MM/yyyy', new Date()),
                     'yyyy-MM-dd',

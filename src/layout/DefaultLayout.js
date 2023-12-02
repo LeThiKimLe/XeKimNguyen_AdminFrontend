@@ -5,7 +5,7 @@ import { useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import { authActions } from 'src/feature/auth/auth.slice'
 import { useDispatch } from 'react-redux'
-
+import requestThunk from './../feature/cancel-request/request.service'
 const DefaultLayout = () => {
     const dispatch = useDispatch()
     const [validSession, setValidSession] = useState(
@@ -18,6 +18,12 @@ const DefaultLayout = () => {
     window.addEventListener('storage', () => {
         setValidSession(JSON.parse(localStorage.getItem('validSession')))
     })
+    useEffect(() => {
+        dispatch(requestThunk.getTicketCancelRequest())
+            .unwrap()
+            .then(() => {})
+            .catch(() => {})
+    }, [])
     if (validSession) {
         return (
             <div>

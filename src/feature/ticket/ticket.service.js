@@ -1,21 +1,6 @@
 import { createAsyncThunk } from '@reduxjs/toolkit'
 import axiosClient from 'src/api/axios'
 
-const getTicketCancelRequest = createAsyncThunk(
-    'staff/tickets/request-cancel',
-    async (_, thunkAPI) => {
-        try {
-            const response = await axiosClient.get('staff/tickets/request-cancel')
-            return response
-        } catch (error) {
-            const message =
-                (error.response && error.response.data && error.response.data.message) ||
-                error.message ||
-                error.toString()
-            return thunkAPI.rejectWithValue(message)
-        }
-    },
-)
 const cancelTicket = createAsyncThunk(
     'staff/tickets/cancel',
     async ({ bookingCode, payment, listCancel }, thunkAPI) => {
@@ -122,24 +107,6 @@ const exportTicket = createAsyncThunk(
         }
     },
 )
-const approveCancelTicket = createAsyncThunk(
-    'staff/tickets/cancel-approval',
-    async ({ requestId, approved }, thunkAPI) => {
-        try {
-            const response = await axiosClient.post('staff/tickets/cancel-approval', {
-                cancelRequestId: requestId,
-                approved: approved,
-            })
-            return response
-        } catch (error) {
-            const message =
-                (error.response && error.response.data && error.response.data.message) ||
-                error.message ||
-                error.toString()
-            return thunkAPI.rejectWithValue(message)
-        }
-    },
-)
 const searchTicket = createAsyncThunk('staff/bookings/search-tel', async (tel, thunkAPI) => {
     try {
         const response = await axiosClient.get('staff/bookings/search-tel', {
@@ -157,13 +124,11 @@ const searchTicket = createAsyncThunk('staff/bookings/search-tel', async (tel, t
     }
 })
 const ticketThunk = {
-    getTicketCancelRequest,
     cancelTicket,
     verifyCancelTicketPolicy,
     changeTicket,
     editTicket,
     exportTicket,
-    approveCancelTicket,
     searchTicket,
 }
 export default ticketThunk

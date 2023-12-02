@@ -9,6 +9,7 @@ import searchReducer from './feature/search/search.slice'
 import routeReducer from './feature/route/route.slice'
 import bookingReducer from './feature/booking/booking.slice'
 import ticketReducer from './feature/ticket/ticket.slice'
+import requestReducer from './feature/cancel-request/request.slice'
 
 const rootPersistConfig = {
     key: 'root',
@@ -24,6 +25,7 @@ const rootReducer = combineReducers({
     route: routeReducer,
     booking: bookingReducer,
     ticket: ticketReducer,
+    request: requestReducer,
 })
 
 const persitedReducer = persistReducer(rootPersistConfig, rootReducer)

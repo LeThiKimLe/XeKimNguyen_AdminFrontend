@@ -1,10 +1,11 @@
 import React from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import PropTypes from 'prop-types'
-
 import { CBadge } from '@coreui/react'
-
+import { useSelector } from 'react-redux'
+import { selectCancelRequest } from 'src/feature/cancel-request/request.slice'
 export const AppSidebarNav = ({ items }) => {
+    const listCancelRequest = useSelector(selectCancelRequest)
     const location = useLocation()
     const navLink = (name, icon, badge) => {
         return (
@@ -13,7 +14,10 @@ export const AppSidebarNav = ({ items }) => {
                 {name && name}
                 {badge && (
                     <CBadge color={badge.color} className="ms-auto">
-                        {badge.text}
+                        {badge.text !== ''
+                            ? badge.text
+                            : listCancelRequest.filter((req) => req.state === 'Chờ phê duyệt')
+                                  .length}
                     </CBadge>
                 )}
             </>

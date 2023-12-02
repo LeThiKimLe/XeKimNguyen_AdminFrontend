@@ -5,7 +5,6 @@ const initialState = {
     currentBooking: null,
     listBooking: [],
     listTicket: [],
-    listCancelRequest: [],
     sourceTicket: {
         schedule: null,
         listTicket: [],
@@ -111,15 +110,6 @@ const ticketSlice = createSlice({
     },
     extraReducers: (builder) => {
         builder
-            .addCase(ticketThunk.getTicketCancelRequest.pending, (state) => {
-                state.loading = true
-            })
-            .addCase(ticketThunk.getTicketCancelRequest.fulfilled, (state, action) => {
-                state.loading = false
-            })
-            .addCase(ticketThunk.getTicketCancelRequest.rejected, (state, action) => {
-                state.loading = false
-            })
             .addCase(ticketThunk.cancelTicket.pending, (state) => {
                 state.loading = true
             })
@@ -156,15 +146,6 @@ const ticketSlice = createSlice({
             .addCase(ticketThunk.editTicket.rejected, (state, action) => {
                 state.loading = false
             })
-            .addCase(ticketThunk.approveCancelTicket.pending, (state) => {
-                state.loading = true
-            })
-            .addCase(ticketThunk.approveCancelTicket.fulfilled, (state, action) => {
-                state.loading = false
-            })
-            .addCase(ticketThunk.approveCancelTicket.rejected, (state, action) => {
-                state.loading = false
-            })
             .addCase(ticketThunk.exportTicket.pending, (state) => {
                 state.loading = true
             })
@@ -188,7 +169,6 @@ const ticketSlice = createSlice({
 })
 export const selectCurrentBooking = (state) => state.ticket.currentBooking
 export const selectListTicket = (state) => state.ticket.listTicket
-export const selectCancelRequest = (state) => state.ticket.listCancelRequest
 export const selectLoading = (state) => state.ticket.loading
 export const selectListBooking = (state) => state.ticket.listBooking
 export const selectListSource = (state) => state.ticket.sourceTicket
