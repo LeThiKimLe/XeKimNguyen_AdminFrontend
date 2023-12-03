@@ -1,5 +1,9 @@
 import React from 'react'
-import { selectRearchResult, selectSearchInfor } from 'src/feature/search/search.slice'
+import {
+    selectRearchResult,
+    selectSearchInfor,
+    selectFilterResult,
+} from 'src/feature/search/search.slice'
 import { useSelector } from 'react-redux'
 import TripInfor from './TripInfor'
 import { CRow, CContainer, CCard, CCollapse, CToaster } from '@coreui/react'
@@ -26,6 +30,7 @@ import { CustomToast } from '../customToast/CustomToast'
 const ListTrip = () => {
     const dispatch = useDispatch()
     const searchResult = useSelector(selectRearchResult)
+    const filterResult = useSelector(selectFilterResult)
     const currentTrip = useSelector(selectCurrentTrip)
     const loadingBook = useSelector(LoadingBook)
     const loadingSearch = useSelector(LoadingSearch)
@@ -78,7 +83,7 @@ const ListTrip = () => {
             {!loadingSearch && searchResult.length > 0 && (
                 <CContainer className="my-3 position-relative">
                     <div className="d-flex gap-3 overflow-auto">
-                        {searchResult.map((trip) => (
+                        {filterResult.map((trip) => (
                             <div key={trip.id}>
                                 <TripInfor
                                     trip={trip}

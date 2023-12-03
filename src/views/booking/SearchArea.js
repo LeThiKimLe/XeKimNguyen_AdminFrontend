@@ -7,13 +7,16 @@ import {
     CFormSelect,
     CToaster,
     CFormInput,
-    CInputGroup,
-    CInputGroupText,
+    CCard,
 } from '@coreui/react'
 import { useState, useMemo, useRef } from 'react'
 import DatePicker from 'react-datepicker'
 import { useDispatch, useSelector } from 'react-redux'
-import { selectSearchInfor, selectLoading } from 'src/feature/search/search.slice'
+import {
+    selectSearchInfor,
+    selectLoading,
+    selectRearchResult,
+} from 'src/feature/search/search.slice'
 import { createListRoutes } from 'src/utils/routeUtils'
 import { CustomToast } from '../customToast/CustomToast'
 import CustomButton from '../customButton/CustomButton'
@@ -27,6 +30,8 @@ import CIcon from '@coreui/icons-react'
 import { cilSearch } from '@coreui/icons'
 import { selectChangeState } from 'src/feature/booking/booking.slice'
 import { selectCurrentTrip } from 'src/feature/booking/booking.slice'
+import FilterBox from './FilterBox'
+import { differenceInSecondsWithOptions } from 'date-fns/fp'
 
 const SearchArea = () => {
     const listRoute = useSelector(selectListRoute)
@@ -41,6 +46,9 @@ const SearchArea = () => {
     const twoMonthsLater = new Date()
     const isChanging = useSelector(selectChangeState)
     const currentTrip = useSelector(selectCurrentTrip)
+    const searchResult = useSelector(selectRearchResult)
+    const [showFilter, setShowFilter] = useState(false)
+    const [filterData, setFilterData] = useState('')
     twoMonthsLater.setMonth(today.getMonth() + 2)
     const depOptions = listDeparture.map((dep) => {
         return { value: dep.key, label: dep.location.name }
@@ -55,13 +63,6 @@ const SearchArea = () => {
                   }
               })
         : []
-    const [quantity, setQuantity] = useState(1)
-
-    const handleQuantityChange = (event) => {
-        setQuantity(event.target.value)
-        handleCurrentInfor('numberTicket', event.target.value)
-    }
-
     const handleCurrentInfor = (propName, propValue) => {
         if (propName !== 'searchRoute')
             setCurrentInfor({
@@ -130,6 +131,11 @@ const SearchArea = () => {
                 })
         }
     }
+    const applyFilter = (filterInfor, filterResult) => {
+        setFilterData(filterInfor)
+        dispatch(searchAction.setFilterTrip(filterResult))
+        setShowFilter(false)
+    }
     useEffect(() => {
         if (currentInfor.desLocation) {
             const selectedTrip = listRoute.filter(
@@ -182,13 +188,31 @@ const SearchArea = () => {
                         />
                     </CCol>
                     <CCol md="2">
-                        <CFormLabel>Số vé</CFormLabel>
-                        <CFormInput
-                            type="number"
-                            value={quantity}
-                            onChange={handleQuantityChange}
-                            disabled={isChanging != null}
-                        />
+                        <CFormLabel>Bộ lọc</CFormLabel>
+                        <div style={{ position: 'relative' }}>
+                            <CFormInput
+                                readOnly
+                                value={filterData}
+                                role="button"
+                                onClick={() => setShowFilter(!showFilter)}
+                                disabled={searchResult.length === 0}
+                            ></CFormInput>
+                            {showFilter && (
+                                <FilterBox
+                                    style={{
+                                        position: 'absolute',
+                                        end: 0,
+                                        width: '270px',
+                                        marginTop: '10px',
+                                        height: '300px',
+                                        overflow: 'auto',
+                                        zIndex: '2',
+                                    }}
+                                    applyFilter={applyFilter}
+                                    listSchedule={searchResult}
+                                ></FilterBox>
+                            )}
+                        </div>
                     </CCol>
                     <CCol md="2" className="d-flex justify-content-center align-items-end p-1">
                         <CustomButton

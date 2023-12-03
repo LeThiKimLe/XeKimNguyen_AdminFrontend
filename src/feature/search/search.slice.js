@@ -20,6 +20,7 @@ const initialState = {
     result: {
         message: '',
         listTrip: [],
+        filterTrip: [],
     },
 }
 
@@ -41,6 +42,12 @@ const searchSlice = createSlice({
                 listTrip: [],
             }
         },
+        setFilterTrip: (state, action) => {
+            state.result = {
+                ...state.result,
+                filterTrip: action.payload,
+            }
+        },
     },
     extraReducers: (builder) => {
         builder
@@ -60,11 +67,13 @@ const searchSlice = createSlice({
                     })
                 })
                 state.result.listTrip = listSchedule
+                state.result.filterTrip = listSchedule
                 state.loading = false
             })
             .addCase(searchThunk.getTrips.rejected, (state, action) => {
                 state.result.message = action.payload
                 state.result.listTrip = []
+                state.result.filterTrip = []
                 state.loading = false
             })
             .addCase(searchThunk.getSameTrips.pending, (state, action) => {
@@ -81,11 +90,13 @@ const searchSlice = createSlice({
                     })
                 })
                 state.result.listTrip = listSchedule
+                state.result.filterTrip = listSchedule
                 state.loading = false
             })
             .addCase(searchThunk.getSameTrips.rejected, (state, action) => {
                 state.result.message = action.payload
                 state.result.listTrip = []
+                state.result.filterTrip = []
                 state.loading = false
             })
     },
@@ -94,7 +105,7 @@ const searchSlice = createSlice({
 export const selectSearchInfor = (state) => state.search.infor
 export const selectRearchResult = (state) => state.search.result.listTrip
 export const selectLoading = (state) => state.search.loading
-
+export const selectFilterResult = (state) => state.search.result.filterTrip
 export const searchAction = searchSlice.actions
 
 const searchPersistConfig = {
