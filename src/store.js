@@ -11,7 +11,10 @@ import bookingReducer from './feature/booking/booking.slice'
 import ticketReducer from './feature/ticket/ticket.slice'
 import requestReducer from './feature/cancel-request/request.slice'
 import filterReducer from './feature/filter/filter.slice'
-
+import locationReducer from './feature/location/location.slice'
+import stationReducer from './feature/station/station.slice'
+import busReducer from './feature/bus/bus.slice'
+import tripReducer from './feature/trip/trip.slice'
 const rootPersistConfig = {
     key: 'root',
     storage,
@@ -28,6 +31,10 @@ const rootReducer = combineReducers({
     ticket: ticketReducer,
     request: requestReducer,
     filter: filterReducer,
+    location: locationReducer,
+    station: stationReducer,
+    bus: busReducer,
+    trip: tripReducer,
 })
 
 const persitedReducer = persistReducer(rootPersistConfig, rootReducer)

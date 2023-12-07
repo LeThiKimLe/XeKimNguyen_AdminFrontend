@@ -6,9 +6,9 @@ import {
 } from 'src/feature/search/search.slice'
 import { useSelector } from 'react-redux'
 import TripInfor from './TripInfor'
-import { CRow, CContainer, CCard, CCollapse, CToaster } from '@coreui/react'
+import { CRow, CContainer, CCard, CCollapse, CToaster, CCol, CButton } from '@coreui/react'
 import { useState, useEffect, useRef } from 'react'
-import { convertToDisplayDate } from 'src/utils/convertUtils'
+import { convertTimeToInt, convertToDisplayDate } from 'src/utils/convertUtils'
 import SeatMap from './SeatMap'
 import TripDetail from './TripDetail'
 import { useDispatch } from 'react-redux'
@@ -26,7 +26,9 @@ import { selectActiveTicket, ticketActions } from 'src/feature/ticket/ticket.sli
 import { selectLoading as LoadingSearch } from 'src/feature/search/search.slice'
 import ChangeTicket from './ChangeTicket'
 import { CustomToast } from '../customToast/CustomToast'
-
+import { filterAction } from 'src/feature/filter/filter.slice'
+import { searchAction } from 'src/feature/search/search.slice'
+import { selectSortOption } from 'src/feature/filter/filter.slice'
 const ListTrip = () => {
     const dispatch = useDispatch()
     const searchResult = useSelector(selectRearchResult)
@@ -38,6 +40,7 @@ const ListTrip = () => {
     const isBooking = useSelector(selectBookingState)
     const isAdjusting = useSelector(selectAdjustState)
     const isChanging = useSelector(selectChangeState)
+    const sort = useSelector(selectSortOption)
     const toaster = useRef('')
     const [toast, addToast] = useState(0)
     const handleSelectTrip = (trip) => {
@@ -60,6 +63,21 @@ const ListTrip = () => {
             CustomToast({ message: 'Chuyến không chọn được vì khác tuyến', type: 'error' }),
         )
     }
+    const handleSortAscendent = (ascendent) => {
+        if (ascendent) {
+            dispatch(filterAction.setSortOption('ascend'))
+            const sortList = [...filterResult].sort(
+                (a, b) => convertTimeToInt(a.departTime) - convertTimeToInt(b.departTime),
+            )
+            dispatch(searchAction.setFilterTrip(sortList))
+        } else {
+            dispatch(filterAction.setSortOption('descend'))
+            const sortList = [...filterResult].sort(
+                (a, b) => convertTimeToInt(b.departTime) - convertTimeToInt(a.departTime),
+            )
+            dispatch(searchAction.setFilterTrip(sortList))
+        }
+    }
     useEffect(() => {
         dispatch(bookingActions.resetListChosen())
     }, [currentTrip])
@@ -77,11 +95,35 @@ const ListTrip = () => {
             dispatch(ticketActions.clearTarget())
         }
     }, [isChanging])
+    console.log(sort)
     return (
         <>
             <CToaster ref={toaster} push={toast} placement="top-end" />
-            {!loadingSearch && searchResult.length > 0 && (
+            {!loadingSearch && filterResult.length > 0 && (
                 <CContainer className="my-3 position-relative">
+                    <CRow className="align-items-center mb-2">
+                        <CCol md="1">Sắp xếp: </CCol>
+                        <CCol md="2">
+                            <CCard
+                                role="button"
+                                color={sort === 'ascend' ? 'warning' : ''}
+                                className={`p-1 text-center`}
+                                onClick={() => handleSortAscendent(true)}
+                            >
+                                Sớm nhất
+                            </CCard>
+                        </CCol>
+                        <CCol md="2">
+                            <CCard
+                                role="button"
+                                color={sort === 'descend' ? 'warning' : ''}
+                                className={`p-1 text-center`}
+                                onClick={() => handleSortAscendent(false)}
+                            >
+                                Muộn nhất
+                            </CCard>
+                        </CCol>
+                    </CRow>
                     <div className="d-flex gap-3 overflow-auto">
                         {filterResult.map((trip) => (
                             <div key={trip.id}>

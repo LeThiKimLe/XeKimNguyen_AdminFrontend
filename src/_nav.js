@@ -12,6 +12,9 @@ import {
     cilStar,
     cilBook,
     cilSearch,
+    cilPeople,
+    cilFactory,
+    cilCalendar,
 } from '@coreui/icons'
 import { CNavGroup, CNavItem, CNavTitle } from '@coreui/react'
 const _nav = [
@@ -53,162 +56,220 @@ const _nav = [
     },
     {
         component: CNavTitle,
-        name: 'Components',
+        name: 'Quản lý',
     },
     {
         component: CNavGroup,
-        name: 'Base',
-        to: '/base',
-        icon: <CIcon icon={cilPuzzle} customClassName="nav-icon" />,
+        name: 'Quản lý nhân sự',
+        to: '/employee-manage',
+        icon: <CIcon icon={cilPeople} customClassName="nav-icon" />,
         items: [
             {
                 component: CNavItem,
-                name: 'Accordion',
-                to: '/base/accordion',
+                name: 'Quản lý nhân viên',
+                to: '/employee-manage/staffs',
             },
             {
                 component: CNavItem,
-                name: 'Breadcrumb',
-                to: '/base/breadcrumbs',
-            },
-            {
-                component: CNavItem,
-                name: 'Cards',
-                to: '/base/cards',
-            },
-            {
-                component: CNavItem,
-                name: 'Carousel',
-                to: '/base/carousels',
-            },
-            {
-                component: CNavItem,
-                name: 'Collapse',
-                to: '/base/collapses',
-            },
-            {
-                component: CNavItem,
-                name: 'List group',
-                to: '/base/list-groups',
-            },
-            {
-                component: CNavItem,
-                name: 'Navs & Tabs',
-                to: '/base/navs',
-            },
-            {
-                component: CNavItem,
-                name: 'Pagination',
-                to: '/base/paginations',
-            },
-            {
-                component: CNavItem,
-                name: 'Placeholders',
-                to: '/base/placeholders',
-            },
-            {
-                component: CNavItem,
-                name: 'Popovers',
-                to: '/base/popovers',
-            },
-            {
-                component: CNavItem,
-                name: 'Progress',
-                to: '/base/progress',
-            },
-            {
-                component: CNavItem,
-                name: 'Spinners',
-                to: '/base/spinners',
-            },
-            {
-                component: CNavItem,
-                name: 'Tables',
-                to: '/base/tables',
-            },
-            {
-                component: CNavItem,
-                name: 'Tooltips',
-                to: '/base/tooltips',
+                name: 'Quản lý tài xế',
+                to: '/employee-manage/drivers',
             },
         ],
     },
     {
         component: CNavGroup,
-        name: 'Buttons',
-        to: '/buttons',
-        icon: <CIcon icon={cilCursor} customClassName="nav-icon" />,
+        name: 'Quản lý hệ thống',
+        to: '/system-manage',
+        icon: <CIcon icon={cilFactory} customClassName="nav-icon" />,
         items: [
             {
                 component: CNavItem,
-                name: 'Buttons',
-                to: '/buttons/buttons',
+                name: 'Quản lý trạm xe',
+                to: '/system-manage/locations',
             },
             {
                 component: CNavItem,
-                name: 'Buttons groups',
-                to: '/buttons/button-groups',
+                name: 'Quản lý tuyến xe',
+                to: '/system-manage/routes',
             },
             {
                 component: CNavItem,
-                name: 'Dropdowns',
-                to: '/buttons/dropdowns',
+                name: 'Quản lý xe',
+                to: '/system-manage/buses',
             },
         ],
     },
     {
         component: CNavGroup,
-        name: 'Forms',
-        icon: <CIcon icon={cilNotes} customClassName="nav-icon" />,
+        name: 'Điều hành xe',
+        to: '/schedule-manage',
+        icon: <CIcon icon={cilCalendar} customClassName="nav-icon" />,
         items: [
             {
                 component: CNavItem,
-                name: 'Form Control',
-                to: '/forms/form-control',
-            },
-            {
-                component: CNavItem,
-                name: 'Select',
-                to: '/forms/select',
-            },
-            {
-                component: CNavItem,
-                name: 'Checks & Radios',
-                to: '/forms/checks-radios',
-            },
-            {
-                component: CNavItem,
-                name: 'Range',
-                to: '/forms/range',
-            },
-            {
-                component: CNavItem,
-                name: 'Input Group',
-                to: '/forms/input-group',
-            },
-            {
-                component: CNavItem,
-                name: 'Floating Labels',
-                to: '/forms/floating-labels',
-            },
-            {
-                component: CNavItem,
-                name: 'Layout',
-                to: '/forms/layout',
-            },
-            {
-                component: CNavItem,
-                name: 'Validation',
-                to: '/forms/validation',
+                name: 'Lịch trình xe',
+                to: '/schedule-manage/schedule',
             },
         ],
     },
-    {
-        component: CNavItem,
-        name: 'Charts',
-        to: '/charts',
-        icon: <CIcon icon={cilChartPie} customClassName="nav-icon" />,
-    },
+    // {
+    //     component: CNavTitle,
+    //     name: 'Components',
+    // },
+    // {
+    //     component: CNavGroup,
+    //     name: 'Base',
+    //     to: '/base',
+    //     icon: <CIcon icon={cilPuzzle} customClassName="nav-icon" />,
+    //     items: [
+    //         {
+    //             component: CNavItem,
+    //             name: 'Accordion',
+    //             to: '/base/accordion',
+    //         },
+    //         {
+    //             component: CNavItem,
+    //             name: 'Breadcrumb',
+    //             to: '/base/breadcrumbs',
+    //         },
+    //         {
+    //             component: CNavItem,
+    //             name: 'Cards',
+    //             to: '/base/cards',
+    //         },
+    //         {
+    //             component: CNavItem,
+    //             name: 'Carousel',
+    //             to: '/base/carousels',
+    //         },
+    //         {
+    //             component: CNavItem,
+    //             name: 'Collapse',
+    //             to: '/base/collapses',
+    //         },
+    //         {
+    //             component: CNavItem,
+    //             name: 'List group',
+    //             to: '/base/list-groups',
+    //         },
+    //         {
+    //             component: CNavItem,
+    //             name: 'Navs & Tabs',
+    //             to: '/base/navs',
+    //         },
+    //         {
+    //             component: CNavItem,
+    //             name: 'Pagination',
+    //             to: '/base/paginations',
+    //         },
+    //         {
+    //             component: CNavItem,
+    //             name: 'Placeholders',
+    //             to: '/base/placeholders',
+    //         },
+    //         {
+    //             component: CNavItem,
+    //             name: 'Popovers',
+    //             to: '/base/popovers',
+    //         },
+    //         {
+    //             component: CNavItem,
+    //             name: 'Progress',
+    //             to: '/base/progress',
+    //         },
+    //         {
+    //             component: CNavItem,
+    //             name: 'Spinners',
+    //             to: '/base/spinners',
+    //         },
+    //         {
+    //             component: CNavItem,
+    //             name: 'Tables',
+    //             to: '/base/tables',
+    //         },
+    //         {
+    //             component: CNavItem,
+    //             name: 'Tooltips',
+    //             to: '/base/tooltips',
+    //         },
+    //     ],
+    // },
+    // {
+    //     component: CNavGroup,
+    //     name: 'Buttons',
+    //     to: '/buttons',
+    //     icon: <CIcon icon={cilCursor} customClassName="nav-icon" />,
+    //     items: [
+    //         {
+    //             component: CNavItem,
+    //             name: 'Buttons',
+    //             to: '/buttons/buttons',
+    //         },
+    //         {
+    //             component: CNavItem,
+    //             name: 'Buttons groups',
+    //             to: '/buttons/button-groups',
+    //         },
+    //         {
+    //             component: CNavItem,
+    //             name: 'Dropdowns',
+    //             to: '/buttons/dropdowns',
+    //         },
+    //     ],
+    // },
+    // {
+    //     component: CNavGroup,
+    //     name: 'Forms',
+    //     icon: <CIcon icon={cilNotes} customClassName="nav-icon" />,
+    //     items: [
+    //         {
+    //             component: CNavItem,
+    //             name: 'Form Control',
+    //             to: '/forms/form-control',
+    //         },
+    //         {
+    //             component: CNavItem,
+    //             name: 'Select',
+    //             to: '/forms/select',
+    //         },
+    //         {
+    //             component: CNavItem,
+    //             name: 'Checks & Radios',
+    //             to: '/forms/checks-radios',
+    //         },
+    //         {
+    //             component: CNavItem,
+    //             name: 'Range',
+    //             to: '/forms/range',
+    //         },
+    //         {
+    //             component: CNavItem,
+    //             name: 'Input Group',
+    //             to: '/forms/input-group',
+    //         },
+    //         {
+    //             component: CNavItem,
+    //             name: 'Floating Labels',
+    //             to: '/forms/floating-labels',
+    //         },
+    //         {
+    //             component: CNavItem,
+    //             name: 'Layout',
+    //             to: '/forms/layout',
+    //         },
+    //         {
+    //             component: CNavItem,
+    //             name: 'Validation',
+    //             to: '/forms/validation',
+    //         },
+    //     ],
+    // },
+    // {
+    //     component: CNavItem,
+    //     name: 'Charts',
+    //     to: '/charts',
+    //     icon: <CIcon icon={cilChartPie} customClassName="nav-icon" />,
+    // },
     {
         component: CNavGroup,
         name: 'Icons',

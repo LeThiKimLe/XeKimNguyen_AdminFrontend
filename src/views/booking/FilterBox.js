@@ -24,6 +24,7 @@ import {
 } from 'src/feature/filter/filter.slice'
 import { filterAction } from 'src/feature/filter/filter.slice'
 import { convertTimeToInt } from 'src/utils/convertUtils'
+import { selectSortOption } from 'src/feature/filter/filter.slice'
 const FilterOption = ({ option, setActiveFilter, setActiveOption }) => {
     const [chosenOption, setChosenOption] = useState(
         option.type === 'select'
@@ -98,6 +99,7 @@ const FilterBox = (props) => {
     const colOptions = useSelector(selectColOptions)
     const rowOptions = useSelector(selectRowOptions)
     const floorOptions = useSelector(selectFloorOptions)
+    const sortOption = useSelector(selectSortOption)
     const dispatch = useDispatch()
     const listFilter = [
         ticketOption,
@@ -418,6 +420,17 @@ const FilterBox = (props) => {
             if (rowOptions.onChoose === true) filterResult = rowFilter(filterResult)
             if (floorOptions.onChoose === true) filterResult = floorFilter(filterResult)
             const filterData = getFilterInfor()
+            if (sortOption !== '') {
+                if (sortOption === 'ascend') {
+                    filterResult.sort(
+                        (a, b) => convertTimeToInt(a.departTime) - convertTimeToInt(b.departTime),
+                    )
+                } else {
+                    filterResult.sort(
+                        (a, b) => convertTimeToInt(b.departTime) - convertTimeToInt(a.departTime),
+                    )
+                }
+            }
             applyFilter(filterData, filterResult)
         }
     }

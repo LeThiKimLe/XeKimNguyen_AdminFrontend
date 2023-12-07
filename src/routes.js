@@ -64,6 +64,19 @@ const SearchTicket = React.lazy(() => import('./views/searchTicket/SearchTicket'
 //Request confirm
 const ConfirmCancel = React.lazy(() => import('./views/confirmCancel/ConfirmCancel'))
 
+//Employee Management
+const DriverManagement = React.lazy(() => import('./views/employees/DriverManagement'))
+const StaffManagement = React.lazy(() => import('./views/employees/StaffManagement'))
+
+//SystemManagement
+const StationManagement = React.lazy(() => import('./views/system/StationManagement'))
+const BusManagement = React.lazy(() => import('./views/system/BusManagement'))
+const RouteManagement = React.lazy(() => import('./views/system/RouteManagement'))
+const SpecialDayManagement = React.lazy(() => import('./views/schedule/SpecialDayManage'))
+
+//ScheduleManagement
+const ScheduleManagement = React.lazy(() => import('./views/schedule/ScheduleManagement'))
+
 const routes = [
     { path: '/', exact: true, name: 'Home' },
     { path: '/dashboard', name: 'Dashboard', element: Dashboard },
@@ -114,6 +127,15 @@ const routes = [
     { path: '/booking', name: 'Đặt vé', element: Booking },
     { path: '/search-ticket', name: 'Tìm vé', element: SearchTicket },
     { path: '/confirm-cancel', name: 'Duyệt hủy vé', element: ConfirmCancel },
+    { path: '/employee-manage', name: 'Quản lý nhân sự', element: StaffManagement, exact: true },
+    { path: '/employee-manage/staffs', name: 'Quản lý nhân viên', element: StaffManagement },
+    { path: '/employee-manage/drivers', name: 'Quản lý tài xế', element: DriverManagement },
+    { path: '/system-manage', name: 'Quản lý hệ thống', element: StationManagement, exact: true },
+    { path: '/system-manage/locations', name: 'Quản lý trạm xe', element: StationManagement },
+    { path: '/system-manage/routes', name: 'Quản lý tuyến xe', element: RouteManagement },
+    { path: '/system-manage/buses', name: 'Quản lý xe', element: BusManagement },
+    { path: '/schedule-manage', name: 'Điều hành xe', element: ScheduleManagement, exact: true },
+    { path: '/schedule-manage/schedule', name: 'Lịch trình xe', element: ScheduleManagement },
 ]
 
 export default routes

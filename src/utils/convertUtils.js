@@ -13,6 +13,12 @@ export const convertToStamp = (decimalHours) => {
     return `${hours} tiếng`
 }
 
+export const convertToStampSplit = (decimalHours) => {
+    const hours = Math.floor(decimalHours)
+    const minutes = Math.round((decimalHours - hours) * 60)
+    return { hours, minutes }
+}
+
 export const calculateTimeInDay = (baseTime, additionalHours) => {
     const totalHours = baseTime + additionalHours
     const result = totalHours % 24
@@ -57,4 +63,9 @@ export const getDate = (date, time) => {
 }
 export const convertToDisplayTimeStamp = (datetime) => {
     return format(new Date(datetime), 'HH:mm - dd/MM/yyyy')
+}
+
+export const convertToPeriodTime = (hour, min) => {
+    const time = hour + min / 60
+    return time
 }

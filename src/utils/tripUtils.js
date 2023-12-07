@@ -52,3 +52,7 @@ export const getDateAndTimeTicket = (ticket) => {
         convertToDisplayDate(ticket.schedule.departDate)
     )
 }
+
+export const getRouteJourney = (route) => {
+    return route.departure.name + ' - ' + route.destination.name
+}

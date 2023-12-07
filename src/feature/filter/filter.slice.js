@@ -107,6 +107,7 @@ const initialState = {
             },
         },
     },
+    sortOption: '',
 }
 
 const filterSlice = createSlice({
@@ -131,6 +132,12 @@ const filterSlice = createSlice({
         setFloorOptions: (state, action) => {
             state.rowOptions = action.payload
         },
+        setSortOption: (state, action) => {
+            state.sortOption = action.payload
+        },
+        reset: (state) => {
+            return initialState
+        },
     },
 })
 
@@ -140,5 +147,6 @@ export const selectVehicleOptions = (state) => state.filter.vehicleOptions
 export const selectColOptions = (state) => state.filter.colOptions
 export const selectRowOptions = (state) => state.filter.rowOptions
 export const selectFloorOptions = (state) => state.filter.floorOptions
+export const selectSortOption = (state) => state.filter.sortOption
 export const filterAction = filterSlice.actions
 export default filterSlice.reducer

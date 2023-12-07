@@ -31,7 +31,7 @@ import { cilSearch } from '@coreui/icons'
 import { selectChangeState } from 'src/feature/booking/booking.slice'
 import { selectCurrentTrip } from 'src/feature/booking/booking.slice'
 import FilterBox from './FilterBox'
-import { differenceInSecondsWithOptions } from 'date-fns/fp'
+import { filterAction } from 'src/feature/filter/filter.slice'
 
 const SearchArea = () => {
     const listRoute = useSelector(selectListRoute)
@@ -108,7 +108,10 @@ const SearchArea = () => {
                 dispatch(searchAction.setSearch(currentInfor))
                 dispatch(searchThunk.getTrips(currentInfor))
                     .unwrap()
-                    .then(() => {})
+                    .then(() => {
+                        dispatch(filterAction.reset())
+                        setFilterData('')
+                    })
                     .catch((error) => {
                         addToast(() => CustomToast({ message: error, type: 'error' }))
                     })
