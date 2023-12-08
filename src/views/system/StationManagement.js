@@ -74,8 +74,8 @@ const Station = ({ locationId, station, empty, finishAdd, visibleEmpty }) => {
             const { results } = response.data
             if (results && results.length > 0) {
                 const { lat, lng } = results[0].geometry.location
-                setLatitude(lat())
-                setLongitude(lng())
+                setLatitude(lat)
+                setLongitude(lng)
                 setStable(true)
             } else {
                 addToast(() => CustomToast({ message: 'Địa chỉ không hợp lệ', type: 'error' }))
@@ -83,6 +83,7 @@ const Station = ({ locationId, station, empty, finishAdd, visibleEmpty }) => {
                 setStable(true)
             }
         } catch (error) {
+            console.log(error)
             addToast(() =>
                 CustomToast({ message: 'Đã xảy ra lỗi. Vui lòng thử lại sau', type: 'error' }),
             )
@@ -726,7 +727,7 @@ const StationManagement = () => {
     const handleAddLocation = () => {
         setIsAdding(true)
         if (emptyLocation.current) {
-            emptyLocation.current.scrollIntoView()
+            emptyLocation.current.scrollIntoView({ behavior: 'smooth' })
         }
     }
     const handleFilter = (opt) => {

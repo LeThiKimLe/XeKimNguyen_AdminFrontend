@@ -4,11 +4,17 @@ import { createSlice } from '@reduxjs/toolkit'
 const initialState = {
     listRoute: [],
     loading: false,
+    isUpdateRoute: false,
 }
 
 const routeSlice = createSlice({
     name: 'route',
     initialState,
+    reducers: {
+        setUpdateState: (state, action) => {
+            state.isUpdateRoute = action.payload
+        },
+    },
     extraReducers: (builder) => {
         builder
             .addCase(routeThunk.getRoute.pending, (state) => {
@@ -59,5 +65,5 @@ const routeSlice = createSlice({
 
 export const selectListRoute = (state) => state.route.listRoute
 export const selectLoadingState = (state) => state.route.loading
-
+export const routeAction = routeSlice.actions
 export default routeSlice.reducer

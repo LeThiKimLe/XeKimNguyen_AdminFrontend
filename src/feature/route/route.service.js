@@ -14,15 +14,15 @@ const getRoute = createAsyncThunk('route/get', async (_, thunkAPI) => {
     }
 })
 
-const addRoute = createAsyncThunk('admin/routes/add', async (routeInfor, thunkAPI) => {
+const addRoute = createAsyncThunk('admin/routes/add', async ({ routeInfor }, thunkAPI) => {
     try {
         const route = await axiosClient.post('admin/routes', {
             distance: routeInfor.distance,
-            departureId: routeInfor.departure.id,
-            destinationId: routeInfor.destination.id,
+            departureId: routeInfor.departure,
+            destinationId: routeInfor.destination,
             price: routeInfor.price,
             schedule: routeInfor.schedule,
-            parents: routeInfor.parents.id,
+            parents: routeInfor.parents,
             hours: routeInfor.hours,
             busType: routeInfor.busType,
         })
@@ -36,7 +36,7 @@ const addRoute = createAsyncThunk('admin/routes/add', async (routeInfor, thunkAP
     }
 })
 
-const editRoute = createAsyncThunk('admin/routes/edit', async (routeInfor, thunkAPI) => {
+const editRoute = createAsyncThunk('admin/routes/edit', async ({ routeInfor }, thunkAPI) => {
     try {
         const route = await axiosClient.put('admin/routes', {
             id: routeInfor.id,
@@ -77,9 +77,11 @@ const getRouteParents = createAsyncThunk(
     'admin/routes/parent',
     async ({ departureId, destinationId }, thunkAPI) => {
         try {
-            const route = await axiosClient.post('admin/routes/parent', {
-                departureId: departureId,
-                destinationId: destinationId,
+            const route = await axiosClient.get('admin/routes/parent', {
+                params: {
+                    departureId: departureId,
+                    destinationId: destinationId,
+                },
             })
             return route
         } catch (error) {
