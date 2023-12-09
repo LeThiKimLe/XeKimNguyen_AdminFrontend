@@ -41,14 +41,139 @@ import { selectListLocation } from 'src/feature/location/location.slice'
 import locationThunk from 'src/feature/location/location.service'
 import stationThunk from 'src/feature/station/station.service'
 import tripThunk from 'src/feature/trip/trip.service'
-const Trip = ({ trip }) => {
+import { cilMediaPlay, cilPlus, cilX } from '@coreui/icons'
+import CIcon from '@coreui/icons-react'
+
+const StopStation = ({ trip, station, finishUpdate }) => {
+    const [showDel, setShowDel] = useState(false)
+    const dispatch = useDispatch()
+    const [showConfirmClose, setShowConfirmClose] = useState(false)
+    const [showConfirmOpen, setShowConfirmOpen] = useState(false)
+    const [toast, addToast] = useState(0)
+    const toaster = useRef('')
+    const handleDelStopStation = () => {
+        dispatch(stationThunk.activeStopStation({ id: station.id, active: false }))
+            .unwrap()
+            .then(() => {
+                addToast(() => CustomToast({ message: 'Đã đóng trạm thành công', type: 'success' }))
+                setShowConfirmClose(false)
+                finishUpdate()
+            })
+            .catch((error) => {
+                addToast(() => CustomToast({ message: error, type: 'danger' }))
+                setShowConfirmClose(false)
+            })
+    }
+    const handleOpenStopStation = () => {
+        dispatch(stationThunk.activeStopStation({ id: station.id, active: true }))
+            .unwrap()
+            .then(() => {
+                addToast(() => CustomToast({ message: 'Đã mở trạm thành công', type: 'success' }))
+                setShowConfirmOpen(false)
+                finishUpdate()
+            })
+            .catch((error) => {
+                addToast(() => CustomToast({ message: error, type: 'danger' }))
+                setShowConfirmOpen(false)
+            })
+    }
+    return (
+        <>
+            <CToaster ref={toaster} push={toast} placement="top-end" />
+            <CCard
+                className="mb-2 p-2"
+                key={station.id}
+                onMouseEnter={() => setShowDel(true)}
+                onMouseLeave={() => setShowDel(false)}
+            >
+                <b>{station.station.name}</b>
+                <span>{station.station.address}</span>
+                {station.station.id !== trip.startStation.id &&
+                    station.station.id !== trip.endStation.id &&
+                    station.active === true && (
+                        <div style={{ textAlign: 'right', visibility: showDel ? '' : 'hidden' }}>
+                            <CIcon
+                                icon={cilX}
+                                role="button"
+                                onClick={() => setShowConfirmClose(true)}
+                            ></CIcon>
+                        </div>
+                    )}
+                {station.active === false && (
+                    <i style={{ color: 'red' }}>Trạm không còn được dùng cho tuyến</i>
+                )}
+                {station.station.id !== trip.startStation.id &&
+                    station.station.id !== trip.endStation.id &&
+                    station.active === false && (
+                        <div style={{ textAlign: 'right', visibility: showDel ? '' : 'hidden' }}>
+                            <CIcon
+                                icon={cilMediaPlay}
+                                role="button"
+                                onClick={() => setShowConfirmOpen(true)}
+                            ></CIcon>
+                        </div>
+                    )}
+            </CCard>
+            <CModal
+                backdrop="static"
+                visible={showConfirmClose}
+                onClose={() => setShowConfirmClose(false)}
+            >
+                <CModalHeader>
+                    <CModalTitle>Xác nhận đóng trạm</CModalTitle>
+                </CModalHeader>
+                <CModalBody>
+                    Sau khi đóng trạm. Các khách hàng không thể chọn điểm đón này nữa.
+                </CModalBody>
+                <CModalFooter>
+                    <CButton color="secondary" onClick={() => setShowConfirmClose(false)}>
+                        Hủy
+                    </CButton>
+                    <CButton color="primary" onClick={handleDelStopStation}>
+                        Đóng
+                    </CButton>
+                </CModalFooter>
+            </CModal>
+            <CModal
+                backdrop="static"
+                visible={showConfirmOpen}
+                onClose={() => setShowConfirmOpen(false)}
+            >
+                <CModalHeader>
+                    <CModalTitle>Xác nhận mở lại trạm</CModalTitle>
+                </CModalHeader>
+                <CModalBody>
+                    Sau khi mở trạm. Các khách hàng có thể chọn điểm đón này cho chuyến xe.
+                </CModalBody>
+                <CModalFooter>
+                    <CButton color="secondary" onClick={() => setShowConfirmOpen(false)}>
+                        Hủy
+                    </CButton>
+                    <CButton color="primary" onClick={handleOpenStopStation}>
+                        Mở
+                    </CButton>
+                </CModalFooter>
+            </CModal>
+        </>
+    )
+}
+
+const Trip = ({ route, trip }) => {
     const [showDetail, setShowDetail] = useState(false)
+    const listLocation = useSelector(selectListLocation)
     const dispatch = useDispatch()
     const [listStopStation, setListStopStation] = useState([])
     const [closeTrip, setCloseTrip] = useState(false)
     const [openTrip, setOpenTrip] = useState(false)
     const [toast, addToast] = useState(0)
     const toaster = useRef('')
+    const listPick = listStopStation.filter((st) => st.stationType === 'pick')
+    const listDrop = listStopStation.filter((st) => st.stationType === 'drop')
+    const [isAddStopStart, setIsAddStopStart] = useState(false)
+    const [isAddStopEnd, setIsAddStopEnd] = useState(false)
+    const [addStart, setAddStart] = useState(0)
+    const [addEnd, setAddEnd] = useState(0)
+    const [loadingAddStop, setLoadingAddStop] = useState(false)
     const updateListRoute = () => {
         dispatch(routeThunk.getRoute())
             .unwrap()
@@ -61,9 +186,11 @@ const Trip = ({ trip }) => {
             .then(() => {
                 addToast(() => CustomToast({ message: 'Đã đóng tuyến xe', type: 'success' }))
                 updateListRoute()
+                setCloseTrip(false)
             })
             .catch((error) => {
                 addToast(() => CustomToast({ message: error, type: 'error' }))
+                setCloseTrip(false)
             })
     }
     const handleOpenTrip = () => {
@@ -72,10 +199,146 @@ const Trip = ({ trip }) => {
             .then(() => {
                 addToast(() => CustomToast({ message: 'Đã mở lại tuyến xe', type: 'success' }))
                 updateListRoute()
+                setOpenTrip(false)
             })
             .catch((error) => {
                 addToast(() => CustomToast({ message: error, type: 'error' }))
+                setOpenTrip(false)
             })
+    }
+    const getListStation = () => {
+        var listStation = []
+        listLocation.forEach((location) => {
+            location.stations.forEach((station) => {
+                listStation.push(station)
+            })
+        })
+        return listStation
+    }
+    const getListStopStationToAddStart = () => {
+        // const listDepStation =
+        //     listLocation.length > 0
+        //         ? listLocation.find((local) => local.id === route.departure.id).stations
+        //         : []
+        const listDepStation = getListStation()
+        const listAddable = listDepStation.filter(
+            (station) => listPick.map((pk) => pk.station.id).includes(station.id) === false,
+        )
+        return listAddable
+    }
+    const getListStopStationToAddEnd = () => {
+        // const listDepStation =
+        //     listLocation.length > 0
+        //         ? listLocation.find((local) => local.id === route.destination.id).stations
+        //         : []
+        const listDepStation = getListStation()
+        const listAddable = listDepStation.filter(
+            (station) => listDrop.map((pk) => pk.station.id).includes(station.id) === false,
+        )
+        return listAddable
+    }
+    const getReverseTrip = () => {
+        const reverseTrip = route.trips.filter(
+            (tp) =>
+                tp.startStation.id === trip.startStation.id &&
+                tp.endStation.id === trip.endStation.id &&
+                tp.turn !== trip.turn,
+        )
+        return reverseTrip[0]
+    }
+    const getListStopStation = () => {
+        dispatch(stationThunk.getStopStations(trip.id))
+            .unwrap()
+            .then((res) => {
+                setListStopStation(res)
+            })
+            .catch((error) => {})
+    }
+    const handleAddStartStopStation = () => {
+        if (addStart !== 0) {
+            const revert = getReverseTrip()
+            setLoadingAddStop(true)
+            dispatch(
+                stationThunk.addStopStation({
+                    tripId: trip.id,
+                    stationId: addStart,
+                    stationType: 'pick',
+                }),
+            )
+                .unwrap()
+                .then(() => {
+                    dispatch(
+                        stationThunk.addStopStation({
+                            tripId: revert.id,
+                            stationId: addStart,
+                            stationType: 'drop',
+                        }),
+                    )
+                        .unwrap()
+                        .then(() => {
+                            setLoadingAddStop(false)
+                            addToast(() =>
+                                CustomToast({
+                                    message: 'Đã thêm trạm thành công',
+                                    type: 'success',
+                                }),
+                            )
+                            getListStopStation()
+                            setIsAddStopStart(false)
+                        })
+                        .catch((error) => {
+                            setLoadingAddStop(false)
+                            addToast(() => CustomToast({ message: error, type: 'error' }))
+                        })
+                })
+                .catch((error) => {
+                    setLoadingAddStop(false)
+                    addToast(() => CustomToast({ message: error, type: 'error' }))
+                })
+        }
+    }
+    const handleAddEndStopStation = () => {
+        if (addEnd !== 0) {
+            const revert = getReverseTrip()
+            setLoadingAddStop(true)
+            dispatch(
+                stationThunk.addStopStation({
+                    tripId: trip.id,
+                    stationId: addEnd,
+                    stationType: 'drop',
+                }),
+            )
+                .unwrap()
+                .then(() => {
+                    dispatch(
+                        stationThunk.addStopStation({
+                            tripId: revert.id,
+                            stationId: addEnd,
+                            stationType: 'pick',
+                        }),
+                    )
+                        .unwrap()
+                        .then(() => {
+                            setLoadingAddStop(false)
+                            addToast(() =>
+                                CustomToast({
+                                    message: 'Đã thêm trạm thành công',
+                                    type: 'success',
+                                }),
+                            )
+                            getListStopStation()
+                            setIsAddStopEnd(false)
+                        })
+                        .catch((error) => {
+                            setLoadingAddStop(false)
+                            addToast(() => CustomToast({ message: error, type: 'error' }))
+                        })
+                })
+                .catch((error) => {
+                    setLoadingAddStop(false)
+                    addToast(() => CustomToast({ message: error, type: 'error' }))
+                })
+        }
     }
     useEffect(() => {
         if (trip)
@@ -88,6 +351,7 @@ const Trip = ({ trip }) => {
     }, [])
     return (
         <>
+            <CToaster ref={toaster} push={toast} placement="top-end" />
             <CCard
                 role="button"
                 onClick={() => setShowDetail(!showDetail)}
@@ -106,40 +370,158 @@ const Trip = ({ trip }) => {
                     <CCardBody>
                         <CRow>
                             <CCol className="border-end">
-                                {listStopStation
-                                    .filter((st) => st.stationType === 'pick')
-                                    .map((station) => (
-                                        <CCard className="mb-2 p-2" key={station.id}>
-                                            <b>{station.station.name}</b>
-                                            <span>{station.station.address}</span>
-                                        </CCard>
-                                    ))}
+                                {listPick.map((station) => (
+                                    <StopStation
+                                        key={station.id}
+                                        trip={trip}
+                                        station={station}
+                                        finishUpdate={getListStopStation}
+                                    ></StopStation>
+                                ))}
+                                {!isAddStopStart && (
+                                    <CButton
+                                        variant="outline"
+                                        color="dark"
+                                        onClick={() => setIsAddStopStart(true)}
+                                    >
+                                        <CIcon icon={cilPlus}></CIcon>
+                                        Thêm
+                                    </CButton>
+                                )}
+                                {isAddStopStart && (
+                                    <CCard>
+                                        <CCardHeader>
+                                            <b>
+                                                <i>Chọn trạm</i>
+                                            </b>
+                                        </CCardHeader>
+                                        <CCardBody>
+                                            <CFormSelect
+                                                value={addStart}
+                                                onChange={(e) =>
+                                                    setAddStart(parseInt(e.target.value))
+                                                }
+                                            >
+                                                <option disabled>Chọn trạm</option>
+                                                {getListStopStationToAddStart().map((sta) => (
+                                                    <option
+                                                        key={sta.id}
+                                                        value={sta.id}
+                                                    >{`${sta.name} - ${sta.address}`}</option>
+                                                ))}
+                                            </CFormSelect>
+                                        </CCardBody>
+                                        <CCardFooter>
+                                            <CRow>
+                                                <CustomButton
+                                                    text="Thêm"
+                                                    loading={loadingAddStop}
+                                                    onClick={handleAddStartStopStation}
+                                                    style={{
+                                                        width: 'fit-content',
+                                                        marginRight: '10px',
+                                                    }}
+                                                    color="success"
+                                                ></CustomButton>
+                                                <CButton
+                                                    variant="outline"
+                                                    color="danger"
+                                                    onClick={() => setIsAddStopStart(false)}
+                                                    style={{ width: 'fit-content' }}
+                                                >
+                                                    Hủy
+                                                </CButton>
+                                            </CRow>
+                                        </CCardFooter>
+                                    </CCard>
+                                )}
                             </CCol>
                             <CCol>
-                                {listStopStation
-                                    .filter((st) => st.stationType === 'drop')
-                                    .map((station) => (
-                                        <CCard className="mb-2 p-2" key={station.id}>
-                                            <b>{station.station.name}</b>
-                                            <span>{station.station.address}</span>
-                                        </CCard>
-                                    ))}
+                                {listDrop.map((station) => (
+                                    <StopStation
+                                        key={station.id}
+                                        trip={trip}
+                                        station={station}
+                                        finishUpdate={getListStopStation}
+                                    ></StopStation>
+                                ))}
+                                {!isAddStopEnd && (
+                                    <CButton
+                                        variant="outline"
+                                        color="dark"
+                                        onClick={() => setIsAddStopEnd(true)}
+                                    >
+                                        <CIcon icon={cilPlus}></CIcon>
+                                        Thêm
+                                    </CButton>
+                                )}
+                                {isAddStopEnd && (
+                                    <CCard>
+                                        <CCardHeader>
+                                            <b>
+                                                <i>Chọn trạm</i>
+                                            </b>
+                                        </CCardHeader>
+                                        <CCardBody>
+                                            <CFormSelect
+                                                value={addEnd}
+                                                onChange={(e) =>
+                                                    setAddEnd(parseInt(e.target.value))
+                                                }
+                                            >
+                                                <option disabled>Chọn trạm</option>
+                                                {getListStopStationToAddEnd().map((sta) => (
+                                                    <option
+                                                        key={sta.id}
+                                                        value={sta.id}
+                                                    >{`${sta.name} - ${sta.address}`}</option>
+                                                ))}
+                                            </CFormSelect>
+                                        </CCardBody>
+                                        <CCardFooter>
+                                            <CRow>
+                                                <CustomButton
+                                                    text="Thêm"
+                                                    onClick={handleAddEndStopStation}
+                                                    loading={loadingAddStop}
+                                                    style={{
+                                                        width: 'fit-content',
+                                                        marginRight: '10px',
+                                                    }}
+                                                    color="success"
+                                                ></CustomButton>
+                                                <CButton
+                                                    variant="outline"
+                                                    color="danger"
+                                                    onClick={() => setIsAddStopEnd(false)}
+                                                    style={{ width: 'fit-content' }}
+                                                >
+                                                    Hủy
+                                                </CButton>
+                                            </CRow>
+                                        </CCardFooter>
+                                    </CCard>
+                                )}
                             </CCol>
                         </CRow>
                     </CCardBody>
                     <CCardFooter>
                         {trip.active === true && (
                             <CButton
+                                variant="outline"
+                                color="danger"
                                 onClick={() => setCloseTrip(true)}
                                 style={{ width: 'fit-content' }}
                             >
                                 Đóng tuyến xe
                             </CButton>
                         )}
-                        {trip.active === true && (
+                        {trip.active === false && (
                             <>
                                 <i style={{ color: 'red' }}>Tuyến xe đã dừng hoạt động</i>
+                                <br></br>
                                 <CButton
+                                    variant="outline"
                                     onClick={() => setOpenTrip(true)}
                                     style={{ width: 'fit-content' }}
                                     className="mt-2"
@@ -219,10 +601,11 @@ const AddTripForm = ({ route, visible, setVisible }) => {
         }
         dispatch(tripThunk.addTrip(tripInfor))
             .unwrap()
-            .then(() => {
-                setVisible(false)
-                setLoading(false)
+            .then((res) => {
+                console.log(res)
                 updateListRoute()
+                setLoading(false)
+                setVisible(false)
             })
             .catch((error) => {
                 setError(error)
@@ -274,11 +657,11 @@ const AddTripForm = ({ route, visible, setVisible }) => {
                             </CFormSelect>
                         </CCol>
                     </CRow>
-                    {error !== '' && <i style={{ color: 'red' }}></i>}
+                    {error !== '' && <i style={{ color: 'red' }}>{error}</i>}
                 </CCardBody>
-                <CCardFooter onClick={() => setVisible(false)}>
+                <CCardFooter>
                     <CRow>
-                        <CCol md="1">
+                        <CCol md="2">
                             <CustomButton
                                 text="Lưu"
                                 color="success"
@@ -286,8 +669,12 @@ const AddTripForm = ({ route, visible, setVisible }) => {
                                 loading={loading}
                             ></CustomButton>
                         </CCol>
-                        <CCol md="1">
-                            <CButton variant="outline" color="danger">
+                        <CCol md="2">
+                            <CButton
+                                variant="outline"
+                                color="danger"
+                                onClick={() => setVisible(false)}
+                            >
                                 Hủy
                             </CButton>
                         </CCol>
@@ -336,7 +723,6 @@ const Route = ({ route }) => {
             )
             if (!tempTrip) listTrip.push(trip)
         })
-        console.log(listTrip)
         return listTrip
     }, [route])
     const handleUpdate = () => {
@@ -347,7 +733,7 @@ const Route = ({ route }) => {
                 distance: distance,
                 price: price,
                 schedule: schedule,
-                parents: parents == 0 ? null : parents,
+                parents: parents,
                 hours: convertToPeriodTime(time.hours, time.minutes),
                 busType: busType,
             }
@@ -378,6 +764,7 @@ const Route = ({ route }) => {
             .unwrap()
             .then(() => {
                 setShowConfirmClose(false)
+                updateListRoute()
             })
     }
     const handleOpenRoute = () => {
@@ -385,6 +772,7 @@ const Route = ({ route }) => {
             .unwrap()
             .then(() => {
                 setShowConfirmOpen(false)
+                updateListRoute()
             })
     }
     return (
@@ -555,8 +943,10 @@ const Route = ({ route }) => {
                                 </CRow>
                                 {route.active === false && (
                                     <CRow className="mb-3 justify-content-center">
-                                        <CFormText color="danger">
-                                            Tuyến đã dừng hoạt động
+                                        <CFormText color="danger" className="p-4">
+                                            <i style={{ color: 'red' }}>
+                                                <b>Tuyến đã dừng hoạt động</b>
+                                            </i>
                                         </CFormText>
                                     </CRow>
                                 )}
@@ -593,7 +983,7 @@ const Route = ({ route }) => {
                                             style={{ width: 'fit-content', marginLeft: '10px' }}
                                             color="success"
                                         >
-                                            Mở tuyến xe
+                                            Mở lại tuyến xe
                                         </CButton>
                                     )}
                                 </CRow>
@@ -605,13 +995,18 @@ const Route = ({ route }) => {
                                     <CCol md="10">
                                         {getListTrip().length > 0 &&
                                             getListTrip().map((trip) => (
-                                                <Trip key={trip.id} trip={trip}></Trip>
+                                                <Trip
+                                                    key={trip.id}
+                                                    trip={trip}
+                                                    route={route}
+                                                ></Trip>
                                             ))}
                                         {getListTrip().length === 0 && (
                                             <b>
                                                 <i>Chưa có tuyến xe</i>
                                             </b>
                                         )}
+                                        <br></br>
                                         <CButton
                                             onClick={() => setAddTrip(true)}
                                             disabled={addTrip}
@@ -743,7 +1138,7 @@ const RouteCreatForm = ({ visible, setVisible, finishAdd }) => {
             destination: des,
             price: price,
             schedule: schedule,
-            parents: parents == 0 ? null : parents,
+            parents: parents,
             hours: convertToPeriodTime(time.hours, time.minutes),
             busType: busType,
         }

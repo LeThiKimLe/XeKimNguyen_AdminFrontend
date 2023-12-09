@@ -1,7 +1,11 @@
 import React from 'react'
 
 const BusManagement = () => {
-    return <div> Bus management </div>
+    return(
+        <div>
+            
+        </div>
+    )
 }
 
 export default BusManagement

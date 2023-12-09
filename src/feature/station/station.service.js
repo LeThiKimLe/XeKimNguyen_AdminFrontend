@@ -83,6 +83,7 @@ const addStopStation = createAsyncThunk(
                 tripId: tripId,
                 stationId: stationId,
                 stationType: stationType,
+                arrivalTime: 0,
             })
             return station
         } catch (error) {

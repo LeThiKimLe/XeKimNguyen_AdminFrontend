@@ -67,6 +67,8 @@ const ConfirmCancel = React.lazy(() => import('./views/confirmCancel/ConfirmCanc
 //Employee Management
 const DriverManagement = React.lazy(() => import('./views/employees/DriverManagement'))
 const StaffManagement = React.lazy(() => import('./views/employees/StaffManagement'))
+const DetailEmployee = React.lazy(() => import('./views/employees/DetailEmployee'))
+const DetailDriver = React.lazy(() => import('./views/employees/DetailDriver'))
 
 //SystemManagement
 const StationManagement = React.lazy(() => import('./views/system/StationManagement'))
@@ -130,6 +132,8 @@ const routes = [
     { path: '/employee-manage', name: 'Quản lý nhân sự', element: StaffManagement, exact: true },
     { path: '/employee-manage/staffs', name: 'Quản lý nhân viên', element: StaffManagement },
     { path: '/employee-manage/drivers', name: 'Quản lý tài xế', element: DriverManagement },
+    { path: '/employee-manage/staffs/detail', name: 'Chi tiết nhân viên', element: DetailEmployee },
+    { path: '/employee-manage/drivers/detail', name: 'Chi tiết tài xế', element: DetailDriver },
     { path: '/system-manage', name: 'Quản lý hệ thống', element: StationManagement, exact: true },
     { path: '/system-manage/locations', name: 'Quản lý trạm xe', element: StationManagement },
     { path: '/system-manage/routes', name: 'Quản lý tuyến xe', element: RouteManagement },

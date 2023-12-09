@@ -69,3 +69,7 @@ export const convertToPeriodTime = (hour, min) => {
     const time = hour + min / 60
     return time
 }
+
+export const convertDataTimeToDisplayDate = (date) => {
+    return format(new Date(date), 'dd/MM/yyyy')
+}
