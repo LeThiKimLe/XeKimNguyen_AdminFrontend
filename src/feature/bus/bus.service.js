@@ -34,7 +34,7 @@ const addBus = createAsyncThunk('admin/bus/add', async (busInfor, thunkAPI) => {
                 manufactureYear: busInfor.year,
                 color: busInfor.color,
                 licensePlate: busInfor.license,
-                typeId: busInfor.type.id,
+                typeId: busInfor.typeId,
             },
         })
         return bus
@@ -55,7 +55,8 @@ const editBus = createAsyncThunk('admin/bus/edit', async (busInfor, thunkAPI) =>
                 manufactureYear: busInfor.year,
                 color: busInfor.color,
                 licensePlate: busInfor.license,
-                typeId: busInfor.type.id,
+                availability: busInfor.availability,
+                typeId: busInfor.typeId,
             },
         })
         return result
@@ -70,18 +71,20 @@ const editBus = createAsyncThunk('admin/bus/edit', async (busInfor, thunkAPI) =>
 
 const updateBusState = createAsyncThunk('admin/bus/state', async ({ id, busState }, thunkAPI) => {
     try {
-        const bus = await axiosClient.put('admin/bus/state', {
-            id: id,
-            brake: busState.brake,
-            lighting: busState.lighting,
-            tire: busState.tire,
-            steering: busState.steering,
-            mirror: busState.mirror,
-            airCondition: busState.airCondition,
-            electric: busState.electric,
-            fuel: busState.fuel,
-            updatedAt: new Date(),
-            overallState: busState.overallState,
+        const bus = await axiosClient.put('admin/bus/state', null, {
+            params: {
+                id: id,
+                brake: busState.brake,
+                lighting: busState.lighting,
+                tire: busState.tire,
+                steering: busState.steering,
+                mirror: busState.mirror,
+                airCondition: busState.airCondition,
+                electric: busState.electric,
+                fuel: busState.fuel,
+                updatedAt: new Date(),
+                overallState: busState.overallState,
+            },
         })
         return bus
     } catch (error) {
@@ -93,5 +96,68 @@ const updateBusState = createAsyncThunk('admin/bus/state', async ({ id, busState
     }
 })
 
-const busThunk = { getBus, addBus, editBus, updateBusState, getBusType }
+const distributeBus = createAsyncThunk(
+    'admin/trips/distribute/bus',
+    async ({ tripId, busId }, thunkAPI) => {
+        try {
+            const bus = await axiosClient.post('admin/trips/distribute', {
+                tripId: tripId,
+                busId: [busId],
+                driverId: [],
+            })
+            return bus
+        } catch (error) {
+            const message =
+                (error.response && error.response.data && error.response.data.message) ||
+                error.message ||
+                error.toString()
+            return thunkAPI.rejectWithValue(message)
+        }
+    },
+)
+
+const getTrips = createAsyncThunk('admin/bus/trips', async (busId, thunkAPI) => {
+    try {
+        const listTrip = await axiosClient.get('admin/bus/trips', {
+            params: {
+                busId: busId,
+            },
+        })
+        return listTrip
+    } catch (error) {
+        const message =
+            (error.response && error.response.data && error.response.data.message) ||
+            error.message ||
+            error.toString()
+        return thunkAPI.rejectWithValue(message)
+    }
+})
+
+const getSchedules = createAsyncThunk('admin/bus/schedules', async (busId, thunkAPI) => {
+    try {
+        const listTrip = await axiosClient.get('admin/bus/schedules', {
+            params: {
+                busId: busId,
+            },
+        })
+        return listTrip
+    } catch (error) {
+        const message =
+            (error.response && error.response.data && error.response.data.message) ||
+            error.message ||
+            error.toString()
+        return thunkAPI.rejectWithValue(message)
+    }
+})
+
+const busThunk = {
+    getBus,
+    addBus,
+    editBus,
+    updateBusState,
+    getBusType,
+    distributeBus,
+    getTrips,
+    getSchedules,
+}
 export default busThunk

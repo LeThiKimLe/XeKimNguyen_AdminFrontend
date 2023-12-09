@@ -133,6 +133,60 @@ const editDriver = createAsyncThunk('admin/driver/edit', async (driverInfor, thu
     }
 })
 
+const distributeDriver = createAsyncThunk(
+    'admin/driver/distribute/',
+    async ({ tripId, driverId }, thunkAPI) => {
+        try {
+            const bus = await axiosClient.post('admin/trips/distribute', {
+                tripId: tripId,
+                busId: [],
+                driverId: [driverId],
+            })
+            return bus
+        } catch (error) {
+            const message =
+                (error.response && error.response.data && error.response.data.message) ||
+                error.message ||
+                error.toString()
+            return thunkAPI.rejectWithValue(message)
+        }
+    },
+)
+
+const getDriverTrip = createAsyncThunk('driver/trips', async (driverId, thunkAPI) => {
+    try {
+        const trips = await axiosClient.get('driver/trips', {
+            params: {
+                driverId: driverId,
+            },
+        })
+        return trips
+    } catch (error) {
+        const message =
+            (error.response && error.response.data && error.response.data.message) ||
+            error.message ||
+            error.toString()
+        return thunkAPI.rejectWithValue(message)
+    }
+})
+
+const getDriverSchedules = createAsyncThunk('driver/schedules', async (driverId, thunkAPI) => {
+    try {
+        const trips = await axiosClient.get('driver/schedules', {
+            params: {
+                driverId: driverId,
+            },
+        })
+        return trips
+    } catch (error) {
+        const message =
+            (error.response && error.response.data && error.response.data.message) ||
+            error.message ||
+            error.toString()
+        return thunkAPI.rejectWithValue(message)
+    }
+})
+
 const activeAccount = createAsyncThunk('admin/user-active', async ({ id, active }, thunkAPI) => {
     try {
         const result = await axiosClient.put('admin/user-active', {
@@ -171,5 +225,8 @@ const staffThunk = {
     editDriver,
     activeAccount,
     getAdmins,
+    distributeDriver,
+    getDriverTrip,
+    getDriverSchedules,
 }
 export default staffThunk

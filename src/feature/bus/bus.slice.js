@@ -59,6 +59,15 @@ const busSlice = createSlice({
             .addCase(busThunk.updateBusState.rejected, (state) => {
                 state.loading = false
             })
+            .addCase(busThunk.distributeBus.pending, (state) => {
+                state.loading = true
+            })
+            .addCase(busThunk.distributeBus.fulfilled, (state) => {
+                state.loading = false
+            })
+            .addCase(busThunk.distributeBus.rejected, (state) => {
+                state.loading = false
+            })
     },
 })
 

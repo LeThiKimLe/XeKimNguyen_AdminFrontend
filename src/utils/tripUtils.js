@@ -56,3 +56,8 @@ export const getDateAndTimeTicket = (ticket) => {
 export const getRouteJourney = (route) => {
     return route.departure.name + ' - ' + route.destination.name
 }
+
+export const getTripJourney = (trip) => {
+    if (trip.turn === true) return trip.startStation.name + '-' + trip.endStation.name
+    else return trip.endStation.name + '-' + trip.startStation.name
+}
