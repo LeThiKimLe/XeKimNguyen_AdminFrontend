@@ -560,132 +560,141 @@ const DetailDriver = () => {
                             </CCol>
                         </CRow>
                     </CCard>
-                    <CCard className="mt-3">
-                        <CCardHeader className="bg-warning">
-                            <b>Thông tin công việc</b>
-                        </CCardHeader>
-                        <CCardBody>
-                            <CRow className="justify-content-center">
-                                <CCol md="10">
-                                    <CCard className="mt-1 p-0">
-                                        <CCardBody>
-                                            {listTrip.length === 0 && (
-                                                <>
-                                                    <b>
-                                                        Tài xế hiện chưa được phân công cho tuyến xe
-                                                        nào
-                                                    </b>
-                                                    <br></br>
-                                                    <CButton
-                                                        className="mt-3"
-                                                        onClick={() =>
-                                                            setShowDistribute(!showDistribute)
-                                                        }
-                                                    >
-                                                        Phân tuyến
-                                                    </CButton>
-                                                    <CCollapse visible={showDistribute}>
-                                                        <CCard className="p-3 mt-3">
-                                                            <CForm
-                                                                className="w-100"
-                                                                noValidate
-                                                                validated={validateDistribute}
-                                                                onSubmit={handleDistribute}
-                                                            >
-                                                                <CFormLabel>
-                                                                    <b>
-                                                                        <i>Chọn tuyến</i>
-                                                                    </b>
-                                                                </CFormLabel>
-                                                                <CFormSelect
-                                                                    required
-                                                                    value={route}
-                                                                    onChange={(e) =>
-                                                                        setRoute(e.target.value)
-                                                                    }
+                    {currentDriver.account.active && (
+                        <CCard className="mt-3">
+                            <CCardHeader className="bg-warning">
+                                <b>Thông tin công việc</b>
+                            </CCardHeader>
+                            <CCardBody>
+                                <CRow className="justify-content-center">
+                                    <CCol md="10">
+                                        <CCard className="mt-1 p-0">
+                                            <CCardBody>
+                                                {listTrip.length === 0 && (
+                                                    <>
+                                                        <b>
+                                                            Tài xế hiện chưa được phân công cho
+                                                            tuyến xe nào
+                                                        </b>
+                                                        <br></br>
+                                                        <CButton
+                                                            className="mt-3"
+                                                            onClick={() =>
+                                                                setShowDistribute(!showDistribute)
+                                                            }
+                                                        >
+                                                            Phân tuyến
+                                                        </CButton>
+                                                        <CCollapse visible={showDistribute}>
+                                                            <CCard className="p-3 mt-3">
+                                                                <CForm
+                                                                    className="w-100"
+                                                                    noValidate
+                                                                    validated={validateDistribute}
+                                                                    onSubmit={handleDistribute}
                                                                 >
-                                                                    <option value={0}>
-                                                                        Chọn một tuyến đường
-                                                                    </option>
-                                                                    {listRoute.map((rte) => (
-                                                                        <option
-                                                                            key={rte.id}
-                                                                            value={rte.id}
-                                                                        >
-                                                                            {getRouteJourney(rte)}
+                                                                    <CFormLabel>
+                                                                        <b>
+                                                                            <i>Chọn tuyến</i>
+                                                                        </b>
+                                                                    </CFormLabel>
+                                                                    <CFormSelect
+                                                                        required
+                                                                        value={route}
+                                                                        onChange={(e) =>
+                                                                            setRoute(e.target.value)
+                                                                        }
+                                                                    >
+                                                                        <option value={0}>
+                                                                            Chọn một tuyến đường
                                                                         </option>
-                                                                    ))}
-                                                                </CFormSelect>
-                                                                {route !== 0 && (
-                                                                    <>
-                                                                        <CFormLabel className="mt-3">
-                                                                            <b>
-                                                                                <i>Chọn tuyến xe</i>
-                                                                            </b>
-                                                                        </CFormLabel>
-                                                                        {getListTrip(route).map(
-                                                                            (tp) => (
-                                                                                <CFormCheck
-                                                                                    type="radio"
-                                                                                    key={tp.id}
-                                                                                    name="tripOptions"
-                                                                                    required
-                                                                                    id={tp.id}
-                                                                                    value={tp.id}
-                                                                                    label={getTripJourney(
-                                                                                        tp,
-                                                                                    )}
-                                                                                    checked={
-                                                                                        tripBus ==
-                                                                                        tp.id
-                                                                                    }
-                                                                                    onChange={() =>
-                                                                                        setTripBus(
-                                                                                            tp.id,
-                                                                                        )
-                                                                                    }
-                                                                                />
-                                                                            ),
-                                                                        )}
-                                                                        <CustomButton
-                                                                            text="Lưu"
-                                                                            color="success"
-                                                                            loading={
-                                                                                loadingDistribute
-                                                                            }
-                                                                            className="mt-3"
-                                                                            type="submit"
-                                                                        ></CustomButton>
-                                                                    </>
-                                                                )}
-                                                            </CForm>
-                                                        </CCard>
-                                                    </CCollapse>
-                                                </>
-                                            )}
-                                            {listTrip.length > 0 && (
-                                                <CCard className="p-3">
-                                                    <b>Hoạt động tuyến: </b>
-                                                    <b>{getTripJourney(listTrip[0])}</b>
-                                                </CCard>
-                                            )}
-                                            <div className="w-100 border-top border-1 mt-3 mb-3"></div>
-                                            <b>
-                                                <i>Lịch sử hoạt động</i>
-                                            </b>
-                                            <br></br>
-                                            {listSchedule.length === 0 && (
-                                                <i>Tài xế chưa thực hiện chuyến xe nào</i>
-                                            )}
-                                            {listSchedule.length > 0 && (
-                                                <b>Lịch sử hoạt động của tài xế</b>
-                                            )}
-                                        </CCardBody>
-                                    </CCard>
-                                </CCol>
-                            </CRow>
-                        </CCardBody>
-                    </CCard>
+                                                                        {listRoute.map((rte) => (
+                                                                            <option
+                                                                                key={rte.id}
+                                                                                value={rte.id}
+                                                                            >
+                                                                                {getRouteJourney(
+                                                                                    rte,
+                                                                                )}
+                                                                            </option>
+                                                                        ))}
+                                                                    </CFormSelect>
+                                                                    {route !== 0 && (
+                                                                        <>
+                                                                            <CFormLabel className="mt-3">
+                                                                                <b>
+                                                                                    <i>
+                                                                                        Chọn tuyến
+                                                                                        xe
+                                                                                    </i>
+                                                                                </b>
+                                                                            </CFormLabel>
+                                                                            {getListTrip(route).map(
+                                                                                (tp) => (
+                                                                                    <CFormCheck
+                                                                                        type="radio"
+                                                                                        key={tp.id}
+                                                                                        name="tripOptions"
+                                                                                        required
+                                                                                        id={tp.id}
+                                                                                        value={
+                                                                                            tp.id
+                                                                                        }
+                                                                                        label={getTripJourney(
+                                                                                            tp,
+                                                                                        )}
+                                                                                        checked={
+                                                                                            tripBus ==
+                                                                                            tp.id
+                                                                                        }
+                                                                                        onChange={() =>
+                                                                                            setTripBus(
+                                                                                                tp.id,
+                                                                                            )
+                                                                                        }
+                                                                                    />
+                                                                                ),
+                                                                            )}
+                                                                            <CustomButton
+                                                                                text="Lưu"
+                                                                                color="success"
+                                                                                loading={
+                                                                                    loadingDistribute
+                                                                                }
+                                                                                className="mt-3"
+                                                                                type="submit"
+                                                                            ></CustomButton>
+                                                                        </>
+                                                                    )}
+                                                                </CForm>
+                                                            </CCard>
+                                                        </CCollapse>
+                                                    </>
+                                                )}
+                                                {listTrip.length > 0 && (
+                                                    <CCard className="p-3">
+                                                        <b>Hoạt động tuyến: </b>
+                                                        <b>{getTripJourney(listTrip[0])}</b>
+                                                    </CCard>
+                                                )}
+                                                <div className="w-100 border-top border-1 mt-3 mb-3"></div>
+                                                <b>
+                                                    <i>Lịch sử hoạt động</i>
+                                                </b>
+                                                <br></br>
+                                                {listSchedule.length === 0 && (
+                                                    <i>Tài xế chưa thực hiện chuyến xe nào</i>
+                                                )}
+                                                {listSchedule.length > 0 && (
+                                                    <b>Lịch sử hoạt động của tài xế</b>
+                                                )}
+                                            </CCardBody>
+                                        </CCard>
+                                    </CCol>
+                                </CRow>
+                            </CCardBody>
+                        </CCard>
+                    )}
                 </>
             )}
             <CModal

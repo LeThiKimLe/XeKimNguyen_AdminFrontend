@@ -39,7 +39,7 @@ import { staffAction } from 'src/feature/staff/staff.slice'
 import { convertToDisplayDate, convertDataTimeToDisplayDate } from 'src/utils/convertUtils'
 import CIcon from '@coreui/icons-react'
 import { cilReload } from '@coreui/icons'
-
+import format from 'date-fns/format'
 const AddDriverForm = ({ visible, setVisible, finishAddDriver }) => {
     const [validated, setValidated] = useState(false)
     const [name, setName] = useState('')
@@ -70,9 +70,9 @@ const AddDriverForm = ({ visible, setVisible, finishAddDriver }) => {
                 gender: gender,
                 idCard: idCard,
                 address: address,
-                beginWorkDate: beginWorkDate,
+                beginWorkDate: format(beginWorkDate, 'yyyy-MM-dd'),
                 licenseNumber: licenseNumber,
-                issueDate: issueDate,
+                issueDate: format(issueDate, 'yyyy-MM-dd'),
             }
             dispatch(staffThunk.addDriver(driverInfor))
                 .unwrap()

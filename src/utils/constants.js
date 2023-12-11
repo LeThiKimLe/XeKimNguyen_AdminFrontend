@@ -118,3 +118,13 @@ export const COLOR_STATE = {
     cancel: 'red',
     info: 'blue',
 }
+
+export const dayInWeek = [
+    'Thứ hai',
+    'Thứ ba',
+    'Thứ tư',
+    'Thứ năm',
+    'Thứ sáu',
+    'Thứ bảy',
+    'Chủ nhật',
+]

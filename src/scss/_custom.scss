@@ -54,3 +54,12 @@ $border-color_1: var(--primary-color);
         border-color: $border-color_1;
     }
 }
+
+.customDatePicker {
+    .react-datepicker__input-container input {
+        padding: 6px;
+        border-radius: 5px;
+        outline: none;
+        border: 1px solid #e3e0e0;
+    }
+}

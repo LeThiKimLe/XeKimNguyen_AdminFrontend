@@ -37,7 +37,7 @@ const addStaff = createAsyncThunk('admin/staffs/add', async (staffInfor, thunkAP
     }
 })
 
-const editStaff = createAsyncThunk('admin/Staffs/edit', async (staffInfor, thunkAPI) => {
+const editStaff = createAsyncThunk('admin/staffs/edit', async (staffInfor, thunkAPI) => {
     try {
         const formData = new FormData()
         formData.append('staffId', staffInfor.staffId)
@@ -47,7 +47,7 @@ const editStaff = createAsyncThunk('admin/Staffs/edit', async (staffInfor, thunk
         formData.append('gender', staffInfor.gender)
         formData.append('idCard', staffInfor.idCard)
         formData.append('address', staffInfor.address)
-        formData.append('beginWorkDate', format(staffInfor.beginWorkDate, 'yyyy-MM-dd'))
+        formData.append('beginWorkDate', staffInfor.beginWorkDate)
         if (staffInfor.file) formData.append('file', staffInfor.file)
         else formData.append('file', new File([], 'empty-file.txt'))
         const config = {

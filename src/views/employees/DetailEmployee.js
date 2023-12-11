@@ -365,7 +365,7 @@ const DetailEmployee = () => {
                                                 <CFormSelect
                                                     value={admin}
                                                     onChange={(e) => setAdmin(e.target.value)}
-                                                    disabled={!isUpdating}
+                                                    disabled
                                                 >
                                                     <option value={true}>Quản trị viên</option>
                                                     <option value={false}>Nhân viên</option>
