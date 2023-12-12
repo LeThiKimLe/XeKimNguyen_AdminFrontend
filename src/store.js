@@ -17,6 +17,7 @@ import busReducer from './feature/bus/bus.slice'
 import tripReducer from './feature/trip/trip.slice'
 import staffReducer from './feature/staff/staff.slice'
 import scheduleReducer from './feature/schedule/schedule.slice'
+import statisticsReducer from './feature/statistics/statistics.slice'
 const rootPersistConfig = {
     key: 'root',
     storage,
@@ -39,6 +40,7 @@ const rootReducer = combineReducers({
     trip: tripReducer,
     staff: staffReducer,
     schedule: scheduleReducer,
+    statistics: statisticsReducer,
 })
 
 const persitedReducer = persistReducer(rootPersistConfig, rootReducer)

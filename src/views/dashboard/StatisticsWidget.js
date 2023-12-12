@@ -21,7 +21,7 @@ import {
 } from 'src/feature/statistics/statistics.slice'
 import format from 'date-fns/format'
 import parse from 'date-fns/parse'
-const WidgetsDropdown = () => {
+const StatisticsWidget = () => {
     const dispatch = useDispatch()
     const today = new Date()
     const currentStatics = useSelector(selectCurrentStatistics)
@@ -142,17 +142,6 @@ const WidgetsDropdown = () => {
     }
     const recentData = getTodayRecentData()
     const recentMonthData = getMonthRecentData()
-    useEffect(() => {
-        dispatch(statisticsThunk.getTodayStatistics())
-            .unwrap()
-            .then(() => {})
-            .catch(() => {})
-        dispatch(statisticsThunk.getCurrentMonthStatistics())
-            .unwrap()
-            .then(() => {})
-            .catch(() => {})
-    }, [])
-    getTodayRate()
     return (
         <CRow>
             <CCol sm={6} lg={3}>
@@ -504,4 +493,4 @@ const WidgetsDropdown = () => {
     )
 }
 
-export default WidgetsDropdown
+export default StatisticsWidget
