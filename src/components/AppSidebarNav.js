@@ -4,9 +4,11 @@ import PropTypes from 'prop-types'
 import { CBadge } from '@coreui/react'
 import { useSelector } from 'react-redux'
 import { selectCancelRequest } from 'src/feature/cancel-request/request.slice'
+import { selectUserRoleId } from 'src/feature/auth/auth.slice'
 export const AppSidebarNav = ({ items }) => {
     const listCancelRequest = useSelector(selectCancelRequest)
     const location = useLocation()
+    const userRole = useSelector(selectUserRoleId)
     const navLink = (name, icon, badge) => {
         return (
             <>
@@ -58,11 +60,23 @@ export const AppSidebarNav = ({ items }) => {
         )
     }
 
+    const adminItem = (item, index) => {
+        if (userRole === 3)
+            if (item.items) return navGroup(item, index)
+            else return navItem(item, index)
+        else return null
+    }
+
+    const staffItem = (item, index) => {
+        if (item.items) return navGroup(item, index)
+        else return navItem(item, index)
+    }
+
     return (
         <React.Fragment>
             {items &&
                 items.map((item, index) =>
-                    item.items ? navGroup(item, index) : navItem(item, index),
+                    item.protected ? adminItem(item, index) : staffItem(item, index),
                 )}
         </React.Fragment>
     )
