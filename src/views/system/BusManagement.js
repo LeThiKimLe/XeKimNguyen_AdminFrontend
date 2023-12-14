@@ -28,6 +28,12 @@ import {
     CModalBody,
     CCardHeader,
     CModalFooter,
+    CTable,
+    CTableHead,
+    CTableRow,
+    CTableHeaderCell,
+    CTableBody,
+    CTableDataCell,
 } from '@coreui/react'
 import CustomButton from '../customButton/CustomButton'
 import { CustomToast } from '../customToast/CustomToast'
@@ -38,6 +44,58 @@ import CIcon from '@coreui/icons-react'
 import { selectListRoute } from 'src/feature/route/route.slice'
 import { getRouteJourney, getTripJourney } from 'src/utils/tripUtils'
 import routeThunk from 'src/feature/route/route.service'
+
+const BusScheduleHistory = ({ listSchedule }) => {
+    const sortTime = (a, b) => {
+        const timeA = new Date(a.departDate + 'T' + a.departTime)
+        const timeB = new Date(b.departDate + 'T' + b.departTime)
+        return timeA.getTime() - timeB.getTime()
+    }
+    return (
+        <CTable>
+            <CTableHead>
+                <CTableRow>
+                    <CTableHeaderCell scope="col">#</CTableHeaderCell>
+                    <CTableHeaderCell className="text-center" scope="col">
+                        Ngày khởi hành
+                    </CTableHeaderCell>
+                    <CTableHeaderCell className="text-center" scope="col">
+                        Giờ khởi hành
+                    </CTableHeaderCell>
+                    <CTableHeaderCell className="text-center" scope="col">
+                        Giờ kết thúc
+                    </CTableHeaderCell>
+                    <CTableHeaderCell className="text-center" scope="col">
+                        Tài xế
+                    </CTableHeaderCell>
+                </CTableRow>
+            </CTableHead>
+            <CTableBody>
+                {listSchedule
+                    .sort((a, b) => sortTime(a, b))
+                    .map((schedule, index) => (
+                        <CTableRow key={index}>
+                            <CTableHeaderCell scope="row">{index + 1}</CTableHeaderCell>
+                            <CTableDataCell className="text-center">
+                                {convertToDisplayDate(schedule.departDate)}
+                            </CTableDataCell>
+                            <CTableDataCell className="text-center">
+                                {schedule.departTime.slice(0, -3)}
+                            </CTableDataCell>
+                            <CTableDataCell className="text-center">
+                                {schedule.finishTime === '00:00:00'
+                                    ? 'Đang cập nhật'
+                                    : schedule.finishTime.slice(0, -3)}
+                            </CTableDataCell>
+                            <CTableDataCell className="text-center">
+                                {schedule.driverUser ? schedule.driverUser.name : 'Đang cập nhật'}
+                            </CTableDataCell>
+                        </CTableRow>
+                    ))}
+            </CTableBody>
+        </CTable>
+    )
+}
 
 const Bus = ({ bus }) => {
     const [manufactureYear, setManufactureYear] = useState(bus.manufactureYear)
@@ -116,7 +174,6 @@ const Bus = ({ bus }) => {
                 dispatch(busThunk.updateBusState({ id: bus.id, busState: busState }))
                     .unwrap()
                     .then(() => {
-                        dispatch(busThunk.distributeBus())
                         setError('')
                         addToast(() =>
                             CustomToast({ message: 'Đã cập nhật thành công', type: 'success' }),
@@ -801,7 +858,9 @@ const Bus = ({ bus }) => {
                                                 <i>Xe chưa hoạt động chuyến nào</i>
                                             )}
                                             {listSchedule.length > 0 && (
-                                                <b>Lịch sử hoạt động của xe</b>
+                                                <BusScheduleHistory
+                                                    listSchedule={listSchedule}
+                                                ></BusScheduleHistory>
                                             )}
                                         </CCardBody>
                                     </CCard>

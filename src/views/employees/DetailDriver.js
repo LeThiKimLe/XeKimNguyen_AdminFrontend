@@ -41,6 +41,60 @@ import { selectListRoute } from 'src/feature/route/route.slice'
 import { getTripJourney, getRouteJourney } from 'src/utils/tripUtils'
 import format from 'date-fns/format'
 import routeThunk from 'src/feature/route/route.service'
+import { convertToDisplayDate } from 'src/utils/convertUtils'
+
+const DriverScheduleHistory = ({ listSchedule }) => {
+    const sortTime = (a, b) => {
+        const timeA = new Date(a.departDate + 'T' + a.departTime)
+        const timeB = new Date(b.departDate + 'T' + b.departTime)
+        return timeA.getTime() - timeB.getTime()
+    }
+    return (
+        <CTable>
+            <CTableHead>
+                <CTableRow>
+                    <CTableHeaderCell scope="col">#</CTableHeaderCell>
+                    <CTableHeaderCell className="text-center" scope="col">
+                        Ngày khởi hành
+                    </CTableHeaderCell>
+                    <CTableHeaderCell className="text-center" scope="col">
+                        Giờ khởi hành
+                    </CTableHeaderCell>
+                    <CTableHeaderCell className="text-center" scope="col">
+                        Giờ kết thúc
+                    </CTableHeaderCell>
+                    <CTableHeaderCell className="text-center" scope="col">
+                        Xe bus
+                    </CTableHeaderCell>
+                </CTableRow>
+            </CTableHead>
+            <CTableBody>
+                {listSchedule
+                    .sort((a, b) => sortTime(a, b))
+                    .map((schedule, index) => (
+                        <CTableRow key={index}>
+                            <CTableHeaderCell scope="row">{index + 1}</CTableHeaderCell>
+                            <CTableDataCell className="text-center">
+                                {convertToDisplayDate(schedule.departDate)}
+                            </CTableDataCell>
+                            <CTableDataCell className="text-center">
+                                {schedule.departTime.slice(0, -3)}
+                            </CTableDataCell>
+                            <CTableDataCell className="text-center">
+                                {schedule.finishTime === '00:00:00'
+                                    ? 'Đang cập nhật'
+                                    : schedule.finishTime.slice(0, -3)}
+                            </CTableDataCell>
+                            <CTableDataCell className="text-center">
+                                {schedule.bus ? schedule.bus.licensePlate : 'Đang cập nhật'}
+                            </CTableDataCell>
+                        </CTableRow>
+                    ))}
+            </CTableBody>
+        </CTable>
+    )
+}
+
 const DetailDriver = () => {
     const currentDriver = useSelector(selectCurrentDriver)
     const [validated, setValidated] = useState(false)
@@ -679,14 +733,16 @@ const DetailDriver = () => {
                                                 )}
                                                 <div className="w-100 border-top border-1 mt-3 mb-3"></div>
                                                 <b>
-                                                    <i>Lịch sử hoạt động</i>
+                                                    <i>Lịch sử chuyến xe</i>
                                                 </b>
                                                 <br></br>
                                                 {listSchedule.length === 0 && (
                                                     <i>Tài xế chưa thực hiện chuyến xe nào</i>
                                                 )}
                                                 {listSchedule.length > 0 && (
-                                                    <b>Lịch sử hoạt động của tài xế</b>
+                                                    <DriverScheduleHistory
+                                                        listSchedule={listSchedule}
+                                                    ></DriverScheduleHistory>
                                                 )}
                                             </CCardBody>
                                         </CCard>

@@ -1,6 +1,6 @@
 import { createAsyncThunk } from '@reduxjs/toolkit'
 import axiosClient from 'src/api/axios'
-
+import format from 'date-fns/format'
 const getBusType = createAsyncThunk('admin/bus/types', async (_, thunkAPI) => {
     try {
         const listBusType = await axiosClient.get('admin/bus/types')
@@ -71,7 +71,7 @@ const editBus = createAsyncThunk('admin/bus/edit', async (busInfor, thunkAPI) =>
 
 const updateBusState = createAsyncThunk('admin/bus/state', async ({ id, busState }, thunkAPI) => {
     try {
-        const bus = await axiosClient.put('admin/bus/state', null, {
+        const bus = await axiosClient.put('driver/bus/state', null, {
             params: {
                 id: id,
                 brake: busState.brake,
@@ -82,7 +82,7 @@ const updateBusState = createAsyncThunk('admin/bus/state', async ({ id, busState
                 airCondition: busState.airCondition,
                 electric: busState.electric,
                 fuel: busState.fuel,
-                updatedAt: new Date(),
+                updatedAt: format(new Date(), 'yyyy-MM-dd'),
                 overallState: busState.overallState,
             },
         })
@@ -118,7 +118,7 @@ const distributeBus = createAsyncThunk(
 
 const getTrips = createAsyncThunk('admin/bus/trips', async (busId, thunkAPI) => {
     try {
-        const listTrip = await axiosClient.get('admin/bus/trips', {
+        const listTrip = await axiosClient.get('driver/bus/trips', {
             params: {
                 busId: busId,
             },
@@ -135,7 +135,7 @@ const getTrips = createAsyncThunk('admin/bus/trips', async (busId, thunkAPI) => 
 
 const getSchedules = createAsyncThunk('admin/bus/schedules', async (busId, thunkAPI) => {
     try {
-        const listTrip = await axiosClient.get('admin/bus/schedules', {
+        const listTrip = await axiosClient.get('driver/bus/schedules', {
             params: {
                 busId: busId,
             },
