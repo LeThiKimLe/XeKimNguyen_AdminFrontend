@@ -108,7 +108,7 @@ const Login = () => {
                                                     <CIcon icon={cilUser} />
                                                 </CInputGroupText>
                                                 <CFormInput
-                                                    placeholder="Tên đăng nhập"
+                                                    placeholder="Nhập email"
                                                     autoComplete="username"
                                                     name="username"
                                                     type="email"
@@ -122,7 +122,7 @@ const Login = () => {
                                                 </CInputGroupText>
                                                 <CFormInput
                                                     type="password"
-                                                    placeholder="Mật khẩu"
+                                                    placeholder="Nhập mật khẩu"
                                                     autoComplete="current-password"
                                                     pattern="^.{6,}$"
                                                     name="password"

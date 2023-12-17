@@ -78,7 +78,9 @@ const TripDetail = ({ currentTrip }) => {
                                 <CFormInput
                                     type="text"
                                     value={
-                                        currentTrip.bus ? currentTrip.bus.licesePlate : '79C-89013'
+                                        currentTrip.bus
+                                            ? currentTrip.bus.licensePlate
+                                            : 'Đang cập nhật'
                                     }
                                     readOnly
                                     plainText
@@ -93,8 +95,8 @@ const TripDetail = ({ currentTrip }) => {
                                 <CFormInput
                                     type="text"
                                     value={
-                                        currentTrip.bus
-                                            ? currentTrip.bus.driver.name
+                                        currentTrip.driverUser
+                                            ? currentTrip.driverUser.name
                                             : 'Đang cập nhật'
                                     }
                                     readOnly

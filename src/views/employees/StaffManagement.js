@@ -113,7 +113,7 @@ const AddStaffForm = ({ visible, setVisible, finishAddStaff }) => {
                 <CModalTitle>Thêm nhân viên</CModalTitle>
             </CModalHeader>
             <CModalBody>
-                <CRow className="w-100">
+                <CRow>
                     <CCard className="mt-3 p-0">
                         <CCardHeader className="bg-info">
                             <b>Thông tin nhân viên</b>

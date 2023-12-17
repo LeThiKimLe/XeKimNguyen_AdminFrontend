@@ -9,6 +9,11 @@ export const AppSidebarNav = ({ items }) => {
     const listCancelRequest = useSelector(selectCancelRequest)
     const location = useLocation()
     const userRole = useSelector(selectUserRoleId)
+    const getNumberRequest = () => {
+        const numberReq = listCancelRequest.filter((req) => req.state === 'Chờ phê duyệt').length
+        if (numberReq > 0) return numberReq
+        else return ''
+    }
     const navLink = (name, icon, badge) => {
         return (
             <>
@@ -16,10 +21,7 @@ export const AppSidebarNav = ({ items }) => {
                 {name && name}
                 {badge && (
                     <CBadge color={badge.color} className="ms-auto">
-                        {badge.text !== ''
-                            ? badge.text
-                            : listCancelRequest.filter((req) => req.state === 'Chờ phê duyệt')
-                                  .length}
+                        {badge.text !== '' ? badge.text : getNumberRequest()}
                     </CBadge>
                 )}
             </>

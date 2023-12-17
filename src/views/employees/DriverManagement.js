@@ -117,7 +117,7 @@ const AddDriverForm = ({ visible, setVisible, finishAddDriver }) => {
                 <CModalTitle>Thêm tài xế</CModalTitle>
             </CModalHeader>
             <CModalBody>
-                <CRow className="w-100">
+                <CRow>
                     <CCard className="mt-3 p-0">
                         <CCardHeader className="bg-info">
                             <b>Thông tin tài xế</b>

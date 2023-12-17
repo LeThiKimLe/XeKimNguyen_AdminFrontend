@@ -314,6 +314,7 @@ const TicketDetail = ({ ticket, visible, handleShow }) => {
     useEffect(() => {
         hasUpdate.current = true
     }, [name, tel, pickStation, dropStation])
+    console.log(ticket)
     return (
         <>
             <CToaster ref={toaster} push={toast} placement="top-end" />
@@ -670,9 +671,13 @@ const TicketDetail = ({ ticket, visible, handleShow }) => {
                                         <CTableDataCell>---</CTableDataCell>
                                         <CTableDataCell>---</CTableDataCell>
                                         <CTableDataCell>
-                                            {ticket.booking.bookingUser
-                                                ? `KH. ${ticket.booking.bookingUser.name}`
-                                                : ticket.booking.conductStaff.nickname}
+                                            {ticket.booking.bookingUser &&
+                                                `KH. ${ticket.booking.bookingUser.name}`}
+                                            {ticket.booking.conductStaff &&
+                                                ticket.booking.conductStaff.nickname}
+                                            {!ticket.booking.conductStaff &&
+                                                !ticket.booking.bookingUser &&
+                                                ticket.booking.name}
                                         </CTableDataCell>
                                     </CTableRow>
                                     {ticket.booking.transaction && (
