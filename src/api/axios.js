@@ -37,6 +37,19 @@ const getRefreshToken = () => {
     } else return ''
 }
 
+let isRefreshing = false
+const refreshSubscribers = []
+
+const subscribeTokenRefresh = (cb) => {
+    refreshSubscribers.push(cb)
+}
+
+// Hàm để xử lý yêu cầu gửi lại sau khi refresh token thành công
+const onRefreshed = (token) => {
+    refreshSubscribers.forEach((cb) => cb(token))
+    refreshSubscribers.length = 0
+}
+
 const refreshAccessToken = () => {
     return new Promise((resolve, reject) => {
         const refreshToken = getRefreshToken()
@@ -86,12 +99,26 @@ axiosClient.interceptors.response.use(
         const originalRequest = error.config
         if (error.response.status === 401 && !originalRequest._retry) {
             originalRequest._retry = true
-            try {
-                const accessToken = await refreshAccessToken()
-                originalRequest.headers.Authorization = `Bearer ${accessToken}`
-                return axiosClient(originalRequest)
-            } catch (error) {
-                console.log(error)
+            if (!isRefreshing) {
+                isRefreshing = true
+                return refreshAccessToken()
+                    .then((token) => {
+                        isRefreshing = false
+                        onRefreshed(token)
+                        originalRequest.headers.Authorization = `Bearer ${token}`
+                        return axiosClient(originalRequest)
+                    })
+                    .catch((error) => {
+                        console.log(error)
+                        return Promise.reject(error)
+                    })
+            } else {
+                return new Promise((resolve) => {
+                    subscribeTokenRefresh((token) => {
+                        originalRequest.headers.Authorization = `Bearer ${token}`
+                        resolve(axiosClient(originalRequest))
+                    })
+                })
             }
         }
         return Promise.reject(error)

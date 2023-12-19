@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import busThunk from 'src/feature/bus/bus.service'
 import { selectListBus } from 'src/feature/bus/bus.slice'
 import { selectListBusType } from 'src/feature/bus/bus.slice'
-import { CCollapse, CFormCheck } from '@coreui/react'
+import { CCollapse, CDropdown, CFormCheck, CSpinner } from '@coreui/react'
 import { Tab, Tabs, TabList, TabPanel } from 'react-tabs'
 import {
     CAccordion,
@@ -97,7 +97,7 @@ const BusScheduleHistory = ({ listSchedule }) => {
     )
 }
 
-const Bus = ({ bus }) => {
+const Bus = ({ bus, currentBus, setActiveBus, finishUpdate }) => {
     const [manufactureYear, setManufactureYear] = useState(bus.manufactureYear)
     const [licensePlate, setLicensePlate] = useState(bus.licensePlate)
     const [color, setColor] = useState(bus.color)
@@ -122,6 +122,8 @@ const Bus = ({ bus }) => {
     const [showDistribute, setShowDistribute] = useState(false)
     const listRoute = useSelector(selectListRoute)
     const [validateDistribute, setValidateDistribute] = useState(false)
+    const [loadingDel, setLoadingDel] = useState(false)
+    const [openDel, setOpenDel] = useState(false)
     const setBusStateAttribute = (e) => {
         setBusState({
             ...busState,
@@ -152,7 +154,8 @@ const Bus = ({ bus }) => {
                             CustomToast({ message: 'Đã cập nhật thành công', type: 'success' }),
                         )
                         setIsUpdatingInfo(false)
-                        setUpdateTime(format(new Date(), 'yyyy-MM-dd'))
+                        if (finishUpdate) finishUpdate()
+                        else reloadListBus()
                     })
                     .catch((error) => {
                         setError(error)
@@ -162,6 +165,12 @@ const Bus = ({ bus }) => {
         } else {
             setIsUpdatingInfo(true)
         }
+    }
+    const reloadListBus = () => {
+        dispatch(busThunk.getBus())
+            .unwrap()
+            .then(() => {})
+            .catch(() => {})
     }
     const handleEditBusState = (event) => {
         event.preventDefault()
@@ -175,10 +184,13 @@ const Bus = ({ bus }) => {
                     .unwrap()
                     .then(() => {
                         setError('')
+                        setUpdateTime(format(new Date(), 'yyyy-MM-dd'))
                         addToast(() =>
                             CustomToast({ message: 'Đã cập nhật thành công', type: 'success' }),
                         )
                         setIsUpdatingState(false)
+                        if (finishUpdate) finishUpdate()
+                        else reloadListBus()
                     })
                     .catch((error) => {
                         setError(error)
@@ -188,12 +200,6 @@ const Bus = ({ bus }) => {
         } else {
             setIsUpdatingState(true)
         }
-    }
-    const reloadListBus = () => {
-        dispatch(busThunk.getBus())
-            .unwrap()
-            .then(() => {})
-            .catch(() => {})
     }
     const resetInfo = () => {
         setValidated(false)
@@ -240,7 +246,9 @@ const Bus = ({ bus }) => {
             .then((rep) => {
                 setListTrip(rep)
             })
-            .catch(() => {})
+            .catch(() => {
+                setListTrip([])
+            })
     }
     const handleDistribute = (e) => {
         e.preventDefault()
@@ -267,24 +275,47 @@ const Bus = ({ bus }) => {
         }
         setValidateDistribute(true)
     }
+    const handleDeleteDistribute = (e) => {
+        setLoadingDel(true)
+        dispatch(busThunk.deleteDistributeBus({ tripId: listTrip[0].id, busId: bus.id }))
+            .unwrap()
+            .then(() => {
+                setLoadingDel(false)
+                reloadTripBus()
+                addToast(() =>
+                    CustomToast({ message: 'Đã hủy phân tuyến cho bus', type: 'success' }),
+                )
+                setOpenDel(false)
+            })
+            .catch(() => {
+                addToast((error) => CustomToast({ message: error, type: 'error' }))
+                setLoadingDel(false)
+            })
+    }
     useEffect(() => {
-        dispatch(busThunk.getTrips(bus.id))
-            .unwrap()
-            .then((rep) => {
-                setListTrip(rep)
-            })
-            .catch(() => {})
-        dispatch(busThunk.getSchedules(bus.id))
-            .unwrap()
-            .then((rep) => {
-                setListSchedule(rep)
-            })
-            .catch(() => {})
-    }, [])
+        if (currentBus === bus.id) {
+            if (listTrip.length === 0) {
+                dispatch(busThunk.getTrips(bus.id))
+                    .unwrap()
+                    .then((rep) => {
+                        setListTrip(rep)
+                    })
+                    .catch(() => {})
+            }
+            if (listSchedule.length === 0) {
+                dispatch(busThunk.getSchedules(bus.id))
+                    .unwrap()
+                    .then((rep) => {
+                        setListSchedule(rep)
+                    })
+                    .catch(() => {})
+            }
+        }
+    }, [currentBus])
     return (
         <>
             <CToaster ref={toaster} push={toast} placement="top-end" />
-            <CAccordionItem itemKey={bus.id} className="mb-2">
+            <CAccordionItem itemKey={bus.id} className="mb-2" onClick={() => setActiveBus(bus.id)}>
                 <CAccordionHeader>
                     <b>{bus.licensePlate}</b>
                 </CAccordionHeader>
@@ -711,9 +742,7 @@ const Bus = ({ bus }) => {
                                                             type="text"
                                                             required
                                                             disabled
-                                                            defaultValue={convertToDisplayDate(
-                                                                updateTime,
-                                                            )}
+                                                            value={convertToDisplayDate(updateTime)}
                                                         />
                                                     </CCol>
                                                 </CRow>
@@ -789,14 +818,22 @@ const Bus = ({ bus }) => {
                                                                     <option value={0}>
                                                                         Chọn một tuyến đường
                                                                     </option>
-                                                                    {listRoute.map((rte) => (
-                                                                        <option
-                                                                            key={rte.id}
-                                                                            value={rte.id}
-                                                                        >
-                                                                            {getRouteJourney(rte)}
-                                                                        </option>
-                                                                    ))}
+                                                                    {listRoute
+                                                                        .filter(
+                                                                            (route) =>
+                                                                                route.busType.id ===
+                                                                                bus.type.id,
+                                                                        )
+                                                                        .map((rte) => (
+                                                                            <option
+                                                                                key={rte.id}
+                                                                                value={rte.id}
+                                                                            >
+                                                                                {getRouteJourney(
+                                                                                    rte,
+                                                                                )}
+                                                                            </option>
+                                                                        ))}
                                                                 </CFormSelect>
                                                                 {route !== 0 && (
                                                                     <>
@@ -847,6 +884,44 @@ const Bus = ({ bus }) => {
                                                 <CCard className="p-3">
                                                     <b>Hoạt động tuyến: </b>
                                                     <b>{getTripJourney(listTrip[0])}</b>
+                                                    <CButton
+                                                        variant="outline"
+                                                        color="danger"
+                                                        onClick={() => setOpenDel(true)}
+                                                        style={{
+                                                            width: 'max-content',
+                                                            marginTop: '10px',
+                                                        }}
+                                                    >
+                                                        Xóa phân công
+                                                    </CButton>
+                                                    <CCollapse visible={openDel} className="mt-2">
+                                                        <CCard>
+                                                            <CCardBody>
+                                                                <b>
+                                                                    Xác nhận xóa tuyến này khỏi phân
+                                                                    công của xe?
+                                                                </b>
+                                                                <div className="d-flex align-items-center gap-2 mt-2">
+                                                                    <CustomButton
+                                                                        text="Xác nhận"
+                                                                        loading={loadingDel}
+                                                                        onClick={
+                                                                            handleDeleteDistribute
+                                                                        }
+                                                                    ></CustomButton>
+                                                                    <CButton
+                                                                        variant="outline"
+                                                                        onClick={() =>
+                                                                            setOpenDel(false)
+                                                                        }
+                                                                    >
+                                                                        Hủy
+                                                                    </CButton>
+                                                                </div>
+                                                            </CCardBody>
+                                                        </CCard>
+                                                    </CCollapse>
                                                 </CCard>
                                             )}
                                             <div className="w-100 border-top border-1 mt-3 mb-3"></div>
@@ -874,7 +949,7 @@ const Bus = ({ bus }) => {
     )
 }
 
-const OpenForm = ({ visible, setVisible, finishAdd }) => {
+const OpenForm = ({ visible, setVisible, finishAdd, currentRoute, currentTrip }) => {
     const [manufactureYear, setManufactureYear] = useState('')
     const [color, setColor] = useState('')
     const [licensePlate, setLicensePlate] = useState('')
@@ -883,6 +958,8 @@ const OpenForm = ({ visible, setVisible, finishAdd }) => {
     const [error, setError] = useState('')
     const [validated, setValidated] = useState(false)
     const [loading, setLoading] = useState(false)
+    const [curRoute, setCurRoute] = useState(currentRoute ? currentRoute : 0)
+    const [curTrip, setCurTrip] = useState(currentTrip ? currentTrip : 0)
     const [toast, addToast] = useState(0)
     const toaster = useRef('')
     const dispatch = useDispatch()
@@ -907,6 +984,24 @@ const OpenForm = ({ visible, setVisible, finishAdd }) => {
                 setLoading(false)
             })
     }
+    const getListTrip = (routeId) => {
+        const routeIn = listRoute.find((rt) => rt.id == routeId)
+        var listTrip = []
+        var tempTrip = null
+        routeIn.trips.forEach((trip) => {
+            if (trip.active === true) {
+                tempTrip = listTrip.find(
+                    (tp) =>
+                        (tp.startStation.id === trip.startStation.id &&
+                            tp.endStation.id === trip.endStation.id) ||
+                        (tp.startStation.id === trip.endStation.id &&
+                            tp.endStation.id === trip.startStation.id),
+                )
+                if (!tempTrip) listTrip.push(trip)
+            }
+        })
+        return listTrip
+    }
     const reset = () => {
         setManufactureYear('')
         setColor('')
@@ -916,6 +1011,20 @@ const OpenForm = ({ visible, setVisible, finishAdd }) => {
         setValidated(false)
     }
 
+    useEffect(() => {
+        if (listRoute.length === 0) {
+            dispatch(routeThunk.getRoute())
+                .unwrap()
+                .then(() => {})
+                .catch(() => {})
+        }
+    }, [])
+    useEffect(() => {
+        setCurRoute(currentRoute)
+    }, [currentRoute])
+    useEffect(() => {
+        setCurTrip(currentTrip)
+    }, [currentTrip])
     return (
         <CModal
             alignment="center"
@@ -1012,6 +1121,51 @@ const OpenForm = ({ visible, setVisible, finishAdd }) => {
                                     </CCol>
                                 </CRow>
                                 <CRow className="mb-3 justify-content-center">
+                                    <CFormLabel htmlFor="color" className="col-sm-2 col-form-label">
+                                        <b>Chọn tuyến</b>
+                                    </CFormLabel>
+                                    <CCol sm="8">
+                                        <CFormSelect
+                                            value={curRoute}
+                                            onChange={(e) => setCurRoute(parseInt(e.target.value))}
+                                        >
+                                            <option value={0} disabled>
+                                                Chọn tuyến
+                                            </option>
+                                            {listRoute.map((route) => (
+                                                <option key={route.id} value={route.id}>
+                                                    {getRouteJourney(route)}
+                                                </option>
+                                            ))}
+                                        </CFormSelect>
+                                    </CCol>
+                                </CRow>
+                                {curRoute !== 0 && (
+                                    <CRow className="mb-3 justify-content-center align-items-center">
+                                        <CFormLabel
+                                            htmlFor="color"
+                                            className="col-sm-2 col-form-label"
+                                        >
+                                            <b>Chọn tuyến xe</b>
+                                        </CFormLabel>
+                                        <CCol sm="8">
+                                            {getListTrip(curRoute).map((trip) => (
+                                                <CFormCheck
+                                                    type="radio"
+                                                    key={trip.id}
+                                                    name="tripOptions"
+                                                    required
+                                                    id={trip.id}
+                                                    value={trip.id}
+                                                    label={getTripJourney(trip)}
+                                                    checked={curTrip == trip.id}
+                                                    onChange={() => setCurTrip(parseInt(trip.id))}
+                                                />
+                                            ))}
+                                        </CCol>
+                                    </CRow>
+                                )}
+                                <CRow className="mb-3 justify-content-center">
                                     <CustomButton
                                         text="Thêm"
                                         type="submit"
@@ -1050,11 +1204,18 @@ const OpenForm = ({ visible, setVisible, finishAdd }) => {
 const BusManagement = () => {
     const dispatch = useDispatch()
     const listBus = useSelector(selectListBus)
+    const [currentTripBus, setCurrentTripBus] = useState([])
     const listBusType = useSelector(selectListBusType)
     const [showOpenForm, setShowOpenForm] = useState(false)
     const [option, setOption] = useState('all')
     const [toast, addToast] = useState(0)
+    const listRoute = useSelector(selectListRoute)
+    const [currentRoute, setCurrentRoute] = useState(0)
+    const [currentTrip, setCurrentTrip] = useState(0)
+    const listReverse = useRef([])
     const toaster = useRef('')
+    const [loadingBus, setLoadingBus] = useState(false)
+    const [activeBus, setActiveBus] = useState(0)
     const reloadListBus = () => {
         dispatch(busThunk.getBus())
             .unwrap()
@@ -1064,6 +1225,36 @@ const BusManagement = () => {
     const finishAdd = () => {
         reloadListBus()
         addToast(() => CustomToast({ message: 'Thêm bus thành công', type: 'success' }))
+    }
+    const getListTrip = (routeId) => {
+        const routeIn = listRoute.find((rt) => rt.id == routeId)
+        var listTrip = []
+        var tempTrip = null
+        listReverse.current = []
+        routeIn.trips.forEach((trip) => {
+            if (trip.active === true) {
+                tempTrip = listTrip.find(
+                    (tp) =>
+                        (tp.startStation.id === trip.startStation.id &&
+                            tp.endStation.id === trip.endStation.id) ||
+                        (tp.startStation.id === trip.endStation.id &&
+                            tp.endStation.id === trip.startStation.id),
+                )
+                if (!tempTrip) listTrip.push(trip)
+                else {
+                    listReverse.current.push({
+                        key: tempTrip.id,
+                        reverse: trip,
+                    })
+                }
+            }
+        })
+        return listTrip
+    }
+    const handleChooseOption = (option) => {
+        setOption(option)
+        setActiveBus(0)
+        if (option === 'all') reloadListBus()
     }
     useEffect(() => {
         dispatch(busThunk.getBus())
@@ -1081,6 +1272,34 @@ const BusManagement = () => {
             .then(() => {})
             .catch(() => {})
     }, [])
+    const finishUpdate = () => {
+        dispatch(busThunk.getTripBus(currentTrip))
+            .unwrap()
+            .then((res) => {
+                setCurrentTripBus(res)
+            })
+            .catch((error) => {
+                setCurrentTripBus([])
+            })
+    }
+    useEffect(() => {
+        if (currentTrip !== 0) {
+            setLoadingBus(true)
+            dispatch(busThunk.getTripBus(currentTrip))
+                .unwrap()
+                .then((res) => {
+                    setCurrentTripBus(res)
+                    setLoadingBus(false)
+                })
+                .catch((error) => {
+                    setCurrentTripBus([])
+                    setLoadingBus(false)
+                })
+        }
+    }, [currentTrip])
+    useEffect(() => {
+        setCurrentTrip(0)
+    }, [currentRoute])
     return (
         <div>
             <CToaster ref={toaster} push={toast} placement="top-end" />
@@ -1092,7 +1311,7 @@ const BusManagement = () => {
                 value="all"
                 label="Tất cả"
                 checked={option === 'all'}
-                onChange={() => setOption('all')}
+                onChange={() => handleChooseOption('all')}
             />
             <CFormCheck
                 inline
@@ -1102,7 +1321,7 @@ const BusManagement = () => {
                 value="route"
                 label="Theo tuyến xe"
                 checked={option === 'route'}
-                onChange={() => setOption('route')}
+                onChange={() => handleChooseOption('route')}
             />
             <CButton style={{ float: 'right' }} onClick={() => setShowOpenForm(true)}>
                 <CIcon icon={cilPlus}></CIcon>
@@ -1110,15 +1329,80 @@ const BusManagement = () => {
             </CButton>
             {option === 'all' && (
                 <CAccordion className="mt-3">
-                    {listBus.map((bus) => (
-                        <Bus bus={bus} key={bus.id}></Bus>
+                    {[...listBus].reverse().map((bus) => (
+                        <Bus
+                            bus={bus}
+                            key={bus.id}
+                            setActiveBus={setActiveBus}
+                            currentBus={activeBus}
+                        ></Bus>
                     ))}
                 </CAccordion>
+            )}
+            {option === 'route' && (
+                <CRow className="mt-3">
+                    <CCol md="4">
+                        <CFormSelect
+                            value={currentRoute}
+                            onChange={(e) => setCurrentRoute(parseInt(e.target.value))}
+                        >
+                            <option value={0}>Chọn tuyến</option>
+                            {listRoute.map((route) => (
+                                <option key={route.id} value={route.id}>
+                                    {getRouteJourney(route)}
+                                </option>
+                            ))}
+                        </CFormSelect>
+                    </CCol>
+                    {currentRoute !== 0 && (
+                        <div className="mt-3">
+                            {getListTrip(currentRoute).map((trip) => (
+                                <CFormCheck
+                                    inline
+                                    type="radio"
+                                    key={trip.id}
+                                    name="tripOptions"
+                                    required
+                                    id={trip.id}
+                                    value={trip.id}
+                                    label={getTripJourney(trip)}
+                                    checked={currentTrip == trip.id}
+                                    onChange={() => setCurrentTrip(parseInt(trip.id))}
+                                />
+                            ))}
+                        </div>
+                    )}
+                    {currentTrip !== 0 && (
+                        <>
+                            {loadingBus && (
+                                <div className="d-flex justify-content-center">
+                                    <CSpinner></CSpinner>
+                                </div>
+                            )}
+                            {!loadingBus && currentTripBus.length > 0 && (
+                                <CAccordion className="mt-3">
+                                    {currentTripBus.map((bus) => (
+                                        <Bus
+                                            bus={bus}
+                                            key={bus.id}
+                                            setActiveBus={setActiveBus}
+                                            currentBus={activeBus}
+                                            finishUpdate={finishUpdate}
+                                        ></Bus>
+                                    ))}
+                                </CAccordion>
+                            )}
+                            {!loadingBus && currentTripBus.length === 0 && <b>Tuyến chưa có xe</b>}
+                        </>
+                    )}
+                </CRow>
             )}
             <OpenForm
                 visible={showOpenForm}
                 setVisible={setShowOpenForm}
                 finishAdd={finishAdd}
+                currentRoute={currentRoute}
+                currentTrip={currentTrip}
             ></OpenForm>
         </div>
     )

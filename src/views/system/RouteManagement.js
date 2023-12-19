@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState, useRef } from 'react'
+import React, { useCallback, useEffect, useState, useRef, useMemo } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import routeThunk from 'src/feature/route/route.service'
 import { selectListRoute, selectLoadingState } from 'src/feature/route/route.slice'
@@ -29,6 +29,7 @@ import {
     CModalHeader,
     CFormText,
     CCardFooter,
+    CFormCheck,
 } from '@coreui/react'
 import { getRouteJourney } from 'src/utils/tripUtils'
 import { Tab, Tabs, TabList, TabPanel } from 'react-tabs'
@@ -43,7 +44,7 @@ import stationThunk from 'src/feature/station/station.service'
 import tripThunk from 'src/feature/trip/trip.service'
 import { cilMediaPlay, cilPlus, cilX } from '@coreui/icons'
 import CIcon from '@coreui/icons-react'
-
+import axios from 'axios'
 const StopStation = ({ trip, station, finishUpdate }) => {
     const [showDel, setShowDel] = useState(false)
     const dispatch = useDispatch()
@@ -90,7 +91,8 @@ const StopStation = ({ trip, station, finishUpdate }) => {
                 <span>{station.station.address}</span>
                 {station.station.id !== trip.startStation.id &&
                     station.station.id !== trip.endStation.id &&
-                    station.active === true && (
+                    station.active === true &&
+                    trip.active === true && (
                         <div style={{ textAlign: 'right', visibility: showDel ? '' : 'hidden' }}>
                             <CIcon
                                 icon={cilX}
@@ -100,7 +102,19 @@ const StopStation = ({ trip, station, finishUpdate }) => {
                         </div>
                     )}
                 {station.active === false && (
-                    <i style={{ color: 'red' }}>Trạm không còn được dùng cho tuyến</i>
+                    <>
+                        <i style={{ color: 'red' }}>Trạm không còn được dùng cho tuyến</i>
+                        {trip.active === true && (
+                            <CButton
+                                className="mt-2 mb-1"
+                                variant="outline"
+                                color="success"
+                                onClick={() => setShowConfirmOpen(true)}
+                            >
+                                Mở lại
+                            </CButton>
+                        )}
+                    </>
                 )}
                 {station.station.id !== trip.startStation.id &&
                     station.station.id !== trip.endStation.id &&
@@ -171,9 +185,13 @@ const Trip = ({ route, trip }) => {
     const listDrop = listStopStation.filter((st) => st.stationType === 'drop')
     const [isAddStopStart, setIsAddStopStart] = useState(false)
     const [isAddStopEnd, setIsAddStopEnd] = useState(false)
-    const [addStart, setAddStart] = useState(0)
-    const [addEnd, setAddEnd] = useState(0)
+    const [addStart, setAddStart] = useState(trip.startStation.id)
+    const [addEnd, setAddEnd] = useState(trip.endStation.id)
     const [loadingAddStop, setLoadingAddStop] = useState(false)
+    const [reopenAbility, setOpenAbility] = useState(
+        trip.startStation.active === true && trip.endStation.active === true,
+    )
+    const [loadingData, setLoadingData] = useState(false)
     const updateListRoute = () => {
         dispatch(routeThunk.getRoute())
             .unwrap()
@@ -210,7 +228,7 @@ const Trip = ({ route, trip }) => {
         var listStation = []
         listLocation.forEach((location) => {
             location.stations.forEach((station) => {
-                listStation.push(station)
+                if (station.active === true) listStation.push(station)
             })
         })
         return listStation
@@ -277,12 +295,13 @@ const Trip = ({ route, trip }) => {
                         .unwrap()
                         .then(() => {
                             setLoadingAddStop(false)
-                            addToast(() =>
-                                CustomToast({
-                                    message: 'Đã thêm trạm thành công',
-                                    type: 'success',
-                                }),
-                            )
+                            if (isAddStopStart)
+                                addToast(() =>
+                                    CustomToast({
+                                        message: 'Đã thêm trạm thành công',
+                                        type: 'success',
+                                    }),
+                                )
                             getListStopStation()
                             setIsAddStopStart(false)
                         })
@@ -320,12 +339,13 @@ const Trip = ({ route, trip }) => {
                         .unwrap()
                         .then(() => {
                             setLoadingAddStop(false)
-                            addToast(() =>
-                                CustomToast({
-                                    message: 'Đã thêm trạm thành công',
-                                    type: 'success',
-                                }),
-                            )
+                            if (isAddStopEnd)
+                                addToast(() =>
+                                    CustomToast({
+                                        message: 'Đã thêm trạm thành công',
+                                        type: 'success',
+                                    }),
+                                )
                             getListStopStation()
                             setIsAddStopEnd(false)
                         })
@@ -340,15 +360,32 @@ const Trip = ({ route, trip }) => {
                 })
         }
     }
+    const addStopStation = async () => {
+        try {
+            await Promise.all([handleAddStartStopStation(), handleAddEndStopStation()])
+            setLoadingData(false)
+        } catch (error) {
+            setLoadingData(false)
+        }
+    }
     useEffect(() => {
-        if (trip)
+        setLoadingData(true)
+        if (trip && listStopStation.length === 0) {
             dispatch(stationThunk.getStopStations(trip.id))
                 .unwrap()
                 .then((res) => {
+                    console.log(res)
                     setListStopStation(res)
+                    setLoadingData(false)
                 })
-                .catch((error) => {})
+                .catch((error) => {
+                    addStopStation()
+                })
+        }
     }, [])
+    useEffect(() => {
+        setOpenAbility(trip.startStation.active === true && trip.endStation.active === true)
+    }, [trip])
     return (
         <>
             <CToaster ref={toaster} push={toast} placement="top-end" />
@@ -362,148 +399,155 @@ const Trip = ({ route, trip }) => {
                     <i>{`${trip.startStation.name} - ${trip.endStation.name}`}</i>
                 </b>
             </CCard>
-            <CCollapse visible={showDetail} className="mb-4">
+            <CCollapse visible={showDetail} className="mb-2">
                 <CCard className="mt-1">
                     <CCardHeader>
                         <b>Danh sách điểm đón / trả</b>
                     </CCardHeader>
                     <CCardBody>
-                        <CRow>
-                            <CCol className="border-end">
-                                {listPick.map((station) => (
-                                    <StopStation
-                                        key={station.id}
-                                        trip={trip}
-                                        station={station}
-                                        finishUpdate={getListStopStation}
-                                    ></StopStation>
-                                ))}
-                                {!isAddStopStart && (
-                                    <CButton
-                                        variant="outline"
-                                        color="dark"
-                                        onClick={() => setIsAddStopStart(true)}
-                                    >
-                                        <CIcon icon={cilPlus}></CIcon>
-                                        Thêm
-                                    </CButton>
-                                )}
-                                {isAddStopStart && (
-                                    <CCard>
-                                        <CCardHeader>
-                                            <b>
-                                                <i>Chọn trạm</i>
-                                            </b>
-                                        </CCardHeader>
-                                        <CCardBody>
-                                            <CFormSelect
-                                                value={addStart}
-                                                onChange={(e) =>
-                                                    setAddStart(parseInt(e.target.value))
-                                                }
-                                            >
-                                                <option disabled>Chọn trạm</option>
-                                                {getListStopStationToAddStart().map((sta) => (
-                                                    <option
-                                                        key={sta.id}
-                                                        value={sta.id}
-                                                    >{`${sta.name} - ${sta.address}`}</option>
-                                                ))}
-                                            </CFormSelect>
-                                        </CCardBody>
-                                        <CCardFooter>
-                                            <CRow>
-                                                <CustomButton
-                                                    text="Thêm"
-                                                    loading={loadingAddStop}
-                                                    onClick={handleAddStartStopStation}
-                                                    style={{
-                                                        width: 'fit-content',
-                                                        marginRight: '10px',
-                                                    }}
-                                                    color="success"
-                                                ></CustomButton>
-                                                <CButton
-                                                    variant="outline"
-                                                    color="danger"
-                                                    onClick={() => setIsAddStopStart(false)}
-                                                    style={{ width: 'fit-content' }}
+                        {!loadingData && (
+                            <CRow>
+                                <CCol className="border-end">
+                                    {listPick.map((station) => (
+                                        <StopStation
+                                            key={station.id}
+                                            trip={trip}
+                                            station={station}
+                                            finishUpdate={getListStopStation}
+                                        ></StopStation>
+                                    ))}
+                                    {!isAddStopStart && trip.active === true && (
+                                        <CButton
+                                            variant="outline"
+                                            color="dark"
+                                            onClick={() => setIsAddStopStart(true)}
+                                        >
+                                            <CIcon icon={cilPlus}></CIcon>
+                                            Thêm
+                                        </CButton>
+                                    )}
+                                    {isAddStopStart && (
+                                        <CCard>
+                                            <CCardHeader>
+                                                <b>
+                                                    <i>Chọn trạm</i>
+                                                </b>
+                                            </CCardHeader>
+                                            <CCardBody>
+                                                <CFormSelect
+                                                    value={addStart}
+                                                    onChange={(e) =>
+                                                        setAddStart(parseInt(e.target.value))
+                                                    }
                                                 >
-                                                    Hủy
-                                                </CButton>
-                                            </CRow>
-                                        </CCardFooter>
-                                    </CCard>
-                                )}
-                            </CCol>
-                            <CCol>
-                                {listDrop.map((station) => (
-                                    <StopStation
-                                        key={station.id}
-                                        trip={trip}
-                                        station={station}
-                                        finishUpdate={getListStopStation}
-                                    ></StopStation>
-                                ))}
-                                {!isAddStopEnd && (
-                                    <CButton
-                                        variant="outline"
-                                        color="dark"
-                                        onClick={() => setIsAddStopEnd(true)}
-                                    >
-                                        <CIcon icon={cilPlus}></CIcon>
-                                        Thêm
-                                    </CButton>
-                                )}
-                                {isAddStopEnd && (
-                                    <CCard>
-                                        <CCardHeader>
-                                            <b>
-                                                <i>Chọn trạm</i>
-                                            </b>
-                                        </CCardHeader>
-                                        <CCardBody>
-                                            <CFormSelect
-                                                value={addEnd}
-                                                onChange={(e) =>
-                                                    setAddEnd(parseInt(e.target.value))
-                                                }
-                                            >
-                                                <option disabled>Chọn trạm</option>
-                                                {getListStopStationToAddEnd().map((sta) => (
-                                                    <option
-                                                        key={sta.id}
-                                                        value={sta.id}
-                                                    >{`${sta.name} - ${sta.address}`}</option>
-                                                ))}
-                                            </CFormSelect>
-                                        </CCardBody>
-                                        <CCardFooter>
-                                            <CRow>
-                                                <CustomButton
-                                                    text="Thêm"
-                                                    onClick={handleAddEndStopStation}
-                                                    loading={loadingAddStop}
-                                                    style={{
-                                                        width: 'fit-content',
-                                                        marginRight: '10px',
-                                                    }}
-                                                    color="success"
-                                                ></CustomButton>
-                                                <CButton
-                                                    variant="outline"
-                                                    color="danger"
-                                                    onClick={() => setIsAddStopEnd(false)}
-                                                    style={{ width: 'fit-content' }}
+                                                    <option disabled>Chọn trạm</option>
+                                                    {getListStopStationToAddStart().map((sta) => (
+                                                        <option
+                                                            key={sta.id}
+                                                            value={sta.id}
+                                                        >{`${sta.name} - ${sta.address}`}</option>
+                                                    ))}
+                                                </CFormSelect>
+                                            </CCardBody>
+                                            <CCardFooter>
+                                                <CRow>
+                                                    <CustomButton
+                                                        text="Thêm"
+                                                        loading={loadingAddStop}
+                                                        onClick={handleAddStartStopStation}
+                                                        style={{
+                                                            width: 'fit-content',
+                                                            marginRight: '10px',
+                                                        }}
+                                                        color="success"
+                                                    ></CustomButton>
+                                                    <CButton
+                                                        variant="outline"
+                                                        color="danger"
+                                                        onClick={() => setIsAddStopStart(false)}
+                                                        style={{ width: 'fit-content' }}
+                                                    >
+                                                        Hủy
+                                                    </CButton>
+                                                </CRow>
+                                            </CCardFooter>
+                                        </CCard>
+                                    )}
+                                </CCol>
+                                <CCol>
+                                    {listDrop.map((station) => (
+                                        <StopStation
+                                            key={station.id}
+                                            trip={trip}
+                                            station={station}
+                                            finishUpdate={getListStopStation}
+                                        ></StopStation>
+                                    ))}
+                                    {!isAddStopEnd && trip.active === true && (
+                                        <CButton
+                                            variant="outline"
+                                            color="dark"
+                                            onClick={() => setIsAddStopEnd(true)}
+                                        >
+                                            <CIcon icon={cilPlus}></CIcon>
+                                            Thêm
+                                        </CButton>
+                                    )}
+                                    {isAddStopEnd && (
+                                        <CCard>
+                                            <CCardHeader>
+                                                <b>
+                                                    <i>Chọn trạm</i>
+                                                </b>
+                                            </CCardHeader>
+                                            <CCardBody>
+                                                <CFormSelect
+                                                    value={addEnd}
+                                                    onChange={(e) =>
+                                                        setAddEnd(parseInt(e.target.value))
+                                                    }
                                                 >
-                                                    Hủy
-                                                </CButton>
-                                            </CRow>
-                                        </CCardFooter>
-                                    </CCard>
-                                )}
-                            </CCol>
-                        </CRow>
+                                                    <option disabled>Chọn trạm</option>
+                                                    {getListStopStationToAddEnd().map((sta) => (
+                                                        <option
+                                                            key={sta.id}
+                                                            value={sta.id}
+                                                        >{`${sta.name} - ${sta.address}`}</option>
+                                                    ))}
+                                                </CFormSelect>
+                                            </CCardBody>
+                                            <CCardFooter>
+                                                <CRow>
+                                                    <CustomButton
+                                                        text="Thêm"
+                                                        onClick={handleAddEndStopStation}
+                                                        loading={loadingAddStop}
+                                                        style={{
+                                                            width: 'fit-content',
+                                                            marginRight: '10px',
+                                                        }}
+                                                        color="success"
+                                                    ></CustomButton>
+                                                    <CButton
+                                                        variant="outline"
+                                                        color="danger"
+                                                        onClick={() => setIsAddStopEnd(false)}
+                                                        style={{ width: 'fit-content' }}
+                                                    >
+                                                        Hủy
+                                                    </CButton>
+                                                </CRow>
+                                            </CCardFooter>
+                                        </CCard>
+                                    )}
+                                </CCol>
+                            </CRow>
+                        )}
+                        {loadingData && (
+                            <div className="d-flex justify-content-center">
+                                <CSpinner />
+                            </div>
+                        )}
                     </CCardBody>
                     <CCardFooter>
                         {trip.active === true && (
@@ -520,14 +564,16 @@ const Trip = ({ route, trip }) => {
                             <>
                                 <i style={{ color: 'red' }}>Tuyến xe đã dừng hoạt động</i>
                                 <br></br>
-                                <CButton
-                                    variant="outline"
-                                    onClick={() => setOpenTrip(true)}
-                                    style={{ width: 'fit-content' }}
-                                    className="mt-2"
-                                >
-                                    Mở lại tuyến xe
-                                </CButton>
+                                {reopenAbility && (
+                                    <CButton
+                                        variant="outline"
+                                        onClick={() => setOpenTrip(true)}
+                                        style={{ width: 'fit-content' }}
+                                        className="mt-2"
+                                    >
+                                        Mở lại tuyến xe
+                                    </CButton>
+                                )}
                             </>
                         )}
                     </CCardFooter>
@@ -602,7 +648,6 @@ const AddTripForm = ({ route, visible, setVisible }) => {
         dispatch(tripThunk.addTrip(tripInfor))
             .unwrap()
             .then((res) => {
-                console.log(res)
                 updateListRoute()
                 setLoading(false)
                 setVisible(false)
@@ -626,7 +671,7 @@ const AddTripForm = ({ route, visible, setVisible }) => {
                 </CCardHeader>
                 <CCardBody>
                     <i>Chọn trạm đi và trạm đến</i>
-                    <CRow>
+                    <CRow className="mt-2">
                         <CCol>
                             <CFormSelect
                                 value={dep}
@@ -705,6 +750,7 @@ const Route = ({ route }) => {
     const [showConfirmOpen, setShowConfirmOpen] = useState(false)
     const [showConfirmClose, setShowConfirmClose] = useState(false)
     const [addTrip, setAddTrip] = useState(false)
+    const [active, setActive] = useState(true)
     const dispatch = useDispatch()
     const updateListRoute = () => {
         dispatch(routeThunk.getRoute())
@@ -712,7 +758,7 @@ const Route = ({ route }) => {
             .then(() => {})
             .catch(() => {})
     }
-    const getListTrip = useCallback(() => {
+    const getListTrip = useMemo(() => {
         var listTrip = []
         var tempTrip
         route.trips.forEach((trip) => {
@@ -786,7 +832,7 @@ const Route = ({ route }) => {
                     <Tabs selectedIndex={selectedTab} onSelect={(index) => setSelectedTab(index)}>
                         <TabList>
                             <Tab>Thông tin tuyến</Tab>
-                            <Tab>Các tuyến xe</Tab>
+                            <Tab>Các tuyến nhỏ</Tab>
                         </TabList>
                         <TabPanel className="d-flex justify-content-center">
                             <CForm className="w-75">
@@ -951,12 +997,14 @@ const Route = ({ route }) => {
                                     </CRow>
                                 )}
                                 <CRow className="mb-3 justify-content-center">
-                                    <CustomButton
-                                        text={isUpdateRoute ? 'Lưu' : 'Cập nhật thông tin'}
-                                        onClick={handleUpdate}
-                                        style={{ width: 'fit-content' }}
-                                        loading={loading}
-                                    ></CustomButton>
+                                    {route.active === true && (
+                                        <CustomButton
+                                            text={isUpdateRoute ? 'Lưu' : 'Cập nhật thông tin'}
+                                            onClick={handleUpdate}
+                                            style={{ width: 'fit-content' }}
+                                            loading={loading}
+                                        ></CustomButton>
+                                    )}
                                     {isUpdateRoute && (
                                         <CButton
                                             variant="outline"
@@ -991,29 +1039,56 @@ const Route = ({ route }) => {
                         </TabPanel>
                         <TabPanel className="d-flex justify-content-center">
                             <div className="w-75">
+                                <CRow className="justify-content-center mb-2">
+                                    <CCol md="10">
+                                        <CFormCheck
+                                            inline
+                                            type="radio"
+                                            required
+                                            id="inactive"
+                                            label="Đang hoạt động"
+                                            checked={active === true}
+                                            onChange={() => setActive(true)}
+                                        />
+                                        <CFormCheck
+                                            inline
+                                            type="radio"
+                                            required
+                                            id="active"
+                                            label="Ngưng hoạt động"
+                                            checked={active === false}
+                                            onChange={() => setActive(false)}
+                                        />
+                                    </CCol>
+                                </CRow>
                                 <CRow className="justify-content-center">
                                     <CCol md="10">
-                                        {getListTrip().length > 0 &&
-                                            getListTrip().map((trip) => (
-                                                <Trip
-                                                    key={trip.id}
-                                                    trip={trip}
-                                                    route={route}
-                                                ></Trip>
-                                            ))}
-                                        {getListTrip().length === 0 && (
+                                        {getListTrip.filter((tp) => tp.active === active).length >
+                                            0 &&
+                                            getListTrip
+                                                .filter((tp) => tp.active === active)
+                                                .map((trip) => (
+                                                    <Trip
+                                                        key={trip.id}
+                                                        trip={trip}
+                                                        route={route}
+                                                    ></Trip>
+                                                ))}
+                                        {getListTrip.length === 0 && (
                                             <b>
                                                 <i>Chưa có tuyến xe</i>
                                             </b>
                                         )}
                                         <br></br>
-                                        <CButton
-                                            onClick={() => setAddTrip(true)}
-                                            disabled={addTrip}
-                                            className="mt-2 mb-2"
-                                        >
-                                            {'Thêm tuyến xe'}
-                                        </CButton>
+                                        {route.active === true && (
+                                            <CButton
+                                                onClick={() => setAddTrip(true)}
+                                                disabled={addTrip}
+                                                className="mt-2 mb-2"
+                                            >
+                                                {'Thêm tuyến xe'}
+                                            </CButton>
+                                        )}
                                         <AddTripForm
                                             route={route}
                                             visible={addTrip}
@@ -1072,7 +1147,8 @@ const Route = ({ route }) => {
 }
 
 const RouteCreatForm = ({ visible, setVisible, finishAdd }) => {
-    const listLocation = useSelector(selectListLocation)
+    const listAllLocation = useSelector(selectListLocation)
+    const [listLocation, setListLocation] = useState(listAllLocation)
     const [des, setDes] = useState(0)
     const [dep, setDep] = useState(0)
     const dispatch = useDispatch()
@@ -1088,11 +1164,101 @@ const RouteCreatForm = ({ visible, setVisible, finishAdd }) => {
     const [loadingConfirm, setLoadingConfirm] = useState(false)
     const loading = useSelector(selectLoadingState)
     const [error, setError] = useState('')
+    const [loadingMap, setLoadingMap] = useState(false)
+    const listCoordinate = useRef([])
     const [time, setTime] = useState({
         hours: 0,
         minutes: 0,
     })
-    const validInfor = () => {
+    const getCoordinates = async (address) => {
+        const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
+            address,
+        )}&format=json`
+        var result = null
+        await axios
+            .get(url)
+            .then((response) => {
+                if (response.data && response.data.length > 0) {
+                    const { lat, lon } = response.data[0]
+                    result = { lat: lat, lon: lon }
+                } else {
+                    result = { lat: 0, lon: 0 }
+                }
+            })
+            .catch((error) => {
+                result = { lat: 0, lon: 0 }
+            })
+        return result
+    }
+    const getDirections = async () => {
+        setLoadingMap(true)
+        var depName = listLocation.find((location) => location.id == dep)
+        var desName = listLocation.find((location) => location.id == des)
+        if (depName && desName) {
+            try {
+                const depCoor = listCoordinate.current.find((place) => place.key == depName.id)
+                const desCoor = listCoordinate.current.find((place) => place.key == desName.id)
+                var locationDep = null
+                if (depCoor) {
+                    locationDep = depCoor.coordinate
+                } else {
+                    locationDep = await getCoordinates(depName.name)
+                    listCoordinate.current.push({
+                        key: depName.id,
+                        coordinate: {
+                            lat: locationDep.lat,
+                            lon: locationDep.lon,
+                        },
+                    })
+                }
+                var locationDes = null
+                if (desCoor) {
+                    locationDes = desCoor.coordinate
+                } else {
+                    locationDes = await getCoordinates(desName.name)
+                    listCoordinate.current.push({
+                        key: desName.id,
+                        coordinate: {
+                            lat: locationDes.lat,
+                            lon: locationDes.lon,
+                        },
+                    })
+                }
+                const url = `https://router.project-osrm.org/route/v1/driving/${encodeURI(
+                    locationDep.lon,
+                )},${encodeURI(locationDep.lat)};${encodeURI(locationDes.lon)},${encodeURI(
+                    locationDes.lat,
+                )}?overview=false&geometries=geojson`
+                await axios.get(url).then((response) => {
+                    if (response.data.routes && response.data.routes.length > 0) {
+                        const { distance, duration } = response.data.routes[0]
+                        setDistance(distance / 1000)
+                        const initTime = convertToStampSplit(duration / 3600)
+                        setTime({
+                            hours: initTime.hours,
+                            minutes: initTime.minutes,
+                        })
+                        setLoadingMap(false)
+                    } else {
+                        setDistance(0)
+                        setTime({
+                            hours: 0,
+                            minutes: 0,
+                        })
+                        setLoadingMap(false)
+                    }
+                })
+            } catch (error) {
+                console.error('Error retrieving directions:', error)
+                setTime({
+                    hours: 0,
+                    minutes: 0,
+                })
+                setLoadingMap(false)
+            }
+        }
+    }
+    const validInfor = async () => {
         var parents = []
         setLoadingConfirm(true)
         dispatch(routeThunk.getRouteParents({ departureId: dep, destinationId: des }))
@@ -1113,9 +1279,13 @@ const RouteCreatForm = ({ visible, setVisible, finishAdd }) => {
                     resetInfor()
                     setListParents(parents)
                 }
+                getDirections()
                 setLoadingConfirm(false)
             })
             .catch((error) => {
+                setIsValid(true)
+                getDirections()
+                setHasConfirm(true)
                 setLoadingConfirm(false)
             })
     }
@@ -1162,6 +1332,9 @@ const RouteCreatForm = ({ visible, setVisible, finishAdd }) => {
                 .catch(() => {})
         }
     }, [])
+    useEffect(() => {
+        setListLocation(listAllLocation.filter((location) => location.active === true))
+    }, [listAllLocation.length])
     useEffect(() => {
         setIsValid(false)
         setHasConfirm(false)
@@ -1214,7 +1387,7 @@ const RouteCreatForm = ({ visible, setVisible, finishAdd }) => {
                     style={{ width: 'fit-content' }}
                     color="success"
                     text="Xác minh thông tin"
-                    disabled={hasConfirm}
+                    disabled={hasConfirm || des === 0 || dep === 0}
                     loading={loadingConfirm}
                 ></CustomButton>
                 <CRow>
@@ -1224,186 +1397,206 @@ const RouteCreatForm = ({ visible, setVisible, finishAdd }) => {
                                 <b>Thông tin tuyến xe</b>
                             </CCardHeader>
                             <CCardBody>
-                                <CForm className="w-100">
-                                    <CRow className="mb-3 justify-content-center">
-                                        <CFormLabel
-                                            htmlFor="distance"
-                                            className="col-sm-2 col-form-label"
-                                        >
-                                            <b>Khoảng cách</b>
-                                        </CFormLabel>
-                                        <CCol sm={8}>
-                                            <CInputGroup>
-                                                <CFormInput
-                                                    type="number"
-                                                    id="distance"
-                                                    value={`${distance}`}
-                                                    onChange={(e) =>
-                                                        setDistance(parseInt(e.target.value))
-                                                    }
-                                                    aria-describedby="distance"
-                                                />
-                                                <CInputGroupText id="distance">km</CInputGroupText>
-                                            </CInputGroup>
-                                        </CCol>
-                                    </CRow>
-                                    <CRow className="mb-3 justify-content-center">
-                                        <CFormLabel
-                                            htmlFor="hours"
-                                            className="col-sm-2 col-form-label"
-                                        >
-                                            <b>Thời gian</b>
-                                        </CFormLabel>
-                                        <CCol sm={8}>
-                                            <CRow>
-                                                <CInputGroup
-                                                    className="w-50"
-                                                    style={{ paddingRight: 0 }}
-                                                >
-                                                    <CFormInput
-                                                        type="number"
-                                                        id="hours"
-                                                        value={`${time.hours}`}
-                                                        onChange={(e) =>
-                                                            setTime({
-                                                                ...time,
-                                                                hours: parseInt(e.target.value),
-                                                            })
-                                                        }
-                                                        aria-describedby="hours"
-                                                    />
-                                                    <CInputGroupText id="hours">
-                                                        tiếng
-                                                    </CInputGroupText>
-                                                </CInputGroup>
-                                                <CInputGroup
-                                                    className="w-50"
-                                                    style={{ paddingLeft: 0 }}
-                                                >
+                                {loadingMap === false && (
+                                    <CForm className="w-100">
+                                        <CRow className="mb-3 justify-content-center">
+                                            <CFormLabel
+                                                htmlFor="distance"
+                                                className="col-sm-2 col-form-label"
+                                            >
+                                                <b>Khoảng cách</b>
+                                            </CFormLabel>
+                                            <CCol sm={8}>
+                                                <CInputGroup>
                                                     <CFormInput
                                                         type="number"
                                                         id="distance"
-                                                        value={`${time.minutes}`}
+                                                        value={`${distance.toFixed(2)}`}
                                                         onChange={(e) =>
-                                                            setTime({
-                                                                ...time,
-                                                                minutes: parseInt(e.target.value),
-                                                            })
+                                                            setDistance(parseInt(e.target.value))
                                                         }
                                                         aria-describedby="distance"
                                                     />
                                                     <CInputGroupText id="distance">
-                                                        phút
+                                                        km
                                                     </CInputGroupText>
                                                 </CInputGroup>
-                                            </CRow>
-                                        </CCol>
-                                    </CRow>
-                                    <CRow className="mb-3 justify-content-center">
-                                        <CFormLabel
-                                            htmlFor="schedule"
-                                            className="col-sm-2 col-form-label"
-                                        >
-                                            <b>Lộ trình</b>
-                                        </CFormLabel>
-                                        <CCol sm={8}>
-                                            <CFormInput
-                                                type="text"
-                                                id="schedule"
-                                                value={`${schedule}`}
-                                                onChange={(e) => setSchedule(e.target.value)}
-                                            />
-                                        </CCol>
-                                    </CRow>
-                                    <CRow className="mb-3 justify-content-center">
-                                        <CFormLabel
-                                            htmlFor="price"
-                                            className="col-sm-2 col-form-label"
-                                        >
-                                            <b>Giá vé</b>
-                                        </CFormLabel>
-                                        <CCol sm={8}>
-                                            <CInputGroup>
+                                            </CCol>
+                                        </CRow>
+                                        <CRow className="mb-3 justify-content-center">
+                                            <CFormLabel
+                                                htmlFor="hours"
+                                                className="col-sm-2 col-form-label"
+                                            >
+                                                <b>Thời gian</b>
+                                            </CFormLabel>
+                                            <CCol sm={8}>
+                                                <CRow>
+                                                    <CInputGroup
+                                                        className="w-50"
+                                                        style={{ paddingRight: 0 }}
+                                                    >
+                                                        <CFormInput
+                                                            type="number"
+                                                            id="hours"
+                                                            value={`${time.hours}`}
+                                                            onChange={(e) =>
+                                                                setTime({
+                                                                    ...time,
+                                                                    hours: parseInt(e.target.value),
+                                                                })
+                                                            }
+                                                            aria-describedby="hours"
+                                                        />
+                                                        <CInputGroupText id="hours">
+                                                            tiếng
+                                                        </CInputGroupText>
+                                                    </CInputGroup>
+                                                    <CInputGroup
+                                                        className="w-50"
+                                                        style={{ paddingLeft: 0 }}
+                                                    >
+                                                        <CFormInput
+                                                            type="number"
+                                                            id="distance"
+                                                            value={`${time.minutes}`}
+                                                            onChange={(e) =>
+                                                                setTime({
+                                                                    ...time,
+                                                                    minutes: parseInt(
+                                                                        e.target.value,
+                                                                    ),
+                                                                })
+                                                            }
+                                                            aria-describedby="distance"
+                                                        />
+                                                        <CInputGroupText id="distance">
+                                                            phút
+                                                        </CInputGroupText>
+                                                    </CInputGroup>
+                                                </CRow>
+                                            </CCol>
+                                        </CRow>
+                                        <CRow className="mb-3 justify-content-center">
+                                            <CFormLabel
+                                                htmlFor="schedule"
+                                                className="col-sm-2 col-form-label"
+                                            >
+                                                <b>Lộ trình</b>
+                                            </CFormLabel>
+                                            <CCol sm={8}>
                                                 <CFormInput
                                                     type="text"
-                                                    id="price"
-                                                    value={price.toLocaleString()}
-                                                    onChange={(e) =>
-                                                        setPrice(
-                                                            parseFloat(
-                                                                e.target.value.replace(/,/g, ''),
-                                                            ),
-                                                        )
-                                                    }
-                                                    aria-describedby="price"
+                                                    id="schedule"
+                                                    value={`${schedule}`}
+                                                    onChange={(e) => setSchedule(e.target.value)}
                                                 />
-                                                <CInputGroupText id="price">VND</CInputGroupText>
-                                            </CInputGroup>
-                                        </CCol>
-                                    </CRow>
-                                    <CRow className="mb-3 justify-content-center">
-                                        <CFormLabel
-                                            htmlFor="bus"
-                                            className="col-sm-2 col-form-label"
-                                        >
-                                            <b>Loại xe</b>
-                                        </CFormLabel>
-                                        <CCol sm={8}>
-                                            <CFormSelect
-                                                value={busType}
-                                                required
-                                                onChange={(e) =>
-                                                    setBusType(parseInt(e.target.value))
-                                                }
+                                            </CCol>
+                                        </CRow>
+                                        <CRow className="mb-3 justify-content-center">
+                                            <CFormLabel
+                                                htmlFor="price"
+                                                className="col-sm-2 col-form-label"
                                             >
-                                                {listBusType.map((busType) => (
-                                                    <option key={busType.id} value={busType.id}>
-                                                        {busType.description}
-                                                    </option>
-                                                ))}
-                                            </CFormSelect>
-                                        </CCol>
-                                    </CRow>
-                                    <CRow className="mb-3 justify-content-center">
-                                        <CFormLabel
-                                            htmlFor="bus"
-                                            className="col-sm-2 col-form-label"
-                                        >
-                                            <b>Tuyến cha</b>
-                                        </CFormLabel>
-                                        <CCol sm={8}>
-                                            <CFormSelect
-                                                value={parents}
-                                                onChange={(e) =>
-                                                    setParents(parseInt(e.target.value))
-                                                }
+                                                <b>Giá vé</b>
+                                            </CFormLabel>
+                                            <CCol sm={8}>
+                                                <CInputGroup>
+                                                    <CFormInput
+                                                        type="text"
+                                                        id="price"
+                                                        value={price.toLocaleString()}
+                                                        onChange={(e) =>
+                                                            setPrice(
+                                                                e.target.value !== ''
+                                                                    ? parseFloat(
+                                                                          e.target.value.replace(
+                                                                              /,/g,
+                                                                              '',
+                                                                          ),
+                                                                      )
+                                                                    : 0,
+                                                            )
+                                                        }
+                                                        aria-describedby="price"
+                                                    />
+                                                    <CInputGroupText id="price">
+                                                        VND
+                                                    </CInputGroupText>
+                                                </CInputGroup>
+                                            </CCol>
+                                        </CRow>
+                                        <CRow className="mb-3 justify-content-center">
+                                            <CFormLabel
+                                                htmlFor="bus"
+                                                className="col-sm-2 col-form-label"
                                             >
-                                                <option value={0}>Chưa có tuyến cha</option>
-                                                {listParent.map((route) => (
-                                                    <option key={route.id} value={route.id}>
-                                                        {getRouteJourney(route)}
-                                                    </option>
-                                                ))}
-                                            </CFormSelect>
-                                        </CCol>
-                                        {error !== '' && <i style={{ color: 'red' }}>{error}</i>}
-                                    </CRow>
-                                    <CRow className="mb-3 justify-content-center">
-                                        <CustomButton
-                                            text={'Thêm tuyến'}
-                                            onClick={handleAdd}
-                                            style={{ width: 'fit-content' }}
-                                            loading={loading}
-                                        ></CustomButton>
-                                        <CButton
-                                            variant="outline"
-                                            onClick={handleCancel}
-                                            style={{ width: 'fit-content', marginLeft: '10px' }}
-                                        >
-                                            Hủy
-                                        </CButton>
-                                    </CRow>
-                                </CForm>
+                                                <b>Loại xe</b>
+                                            </CFormLabel>
+                                            <CCol sm={8}>
+                                                <CFormSelect
+                                                    value={busType}
+                                                    required
+                                                    onChange={(e) =>
+                                                        setBusType(parseInt(e.target.value))
+                                                    }
+                                                >
+                                                    {listBusType.map((busType) => (
+                                                        <option key={busType.id} value={busType.id}>
+                                                            {busType.description}
+                                                        </option>
+                                                    ))}
+                                                </CFormSelect>
+                                            </CCol>
+                                        </CRow>
+                                        <CRow className="mb-3 justify-content-center">
+                                            <CFormLabel
+                                                htmlFor="bus"
+                                                className="col-sm-2 col-form-label"
+                                            >
+                                                <b>Tuyến cha</b>
+                                            </CFormLabel>
+                                            <CCol sm={8}>
+                                                <CFormSelect
+                                                    value={parents}
+                                                    onChange={(e) =>
+                                                        setParents(parseInt(e.target.value))
+                                                    }
+                                                >
+                                                    <option value={0}>Chưa có tuyến cha</option>
+                                                    {listParent.map((route) => (
+                                                        <option key={route.id} value={route.id}>
+                                                            {getRouteJourney(route)}
+                                                        </option>
+                                                    ))}
+                                                </CFormSelect>
+                                            </CCol>
+                                            {error !== '' && (
+                                                <i style={{ color: 'red' }}>{error}</i>
+                                            )}
+                                        </CRow>
+                                        <CRow className="mb-3 justify-content-center">
+                                            <CustomButton
+                                                text={'Thêm tuyến'}
+                                                onClick={handleAdd}
+                                                style={{ width: 'fit-content' }}
+                                                loading={loading}
+                                            ></CustomButton>
+                                            <CButton
+                                                variant="outline"
+                                                onClick={handleCancel}
+                                                style={{ width: 'fit-content', marginLeft: '10px' }}
+                                            >
+                                                Hủy
+                                            </CButton>
+                                        </CRow>
+                                    </CForm>
+                                )}
+                                {loadingMap && (
+                                    <div className="d-flex justify-content-center">
+                                        <CSpinner />
+                                    </div>
+                                )}
                             </CCardBody>
                         </CCard>
                     )}
@@ -1431,10 +1624,12 @@ const RouteCreatForm = ({ visible, setVisible, finishAdd }) => {
 
 const RouteManagement = () => {
     const [loading, setLoading] = useState(false)
-    const listRoute = useSelector(selectListRoute)
+    const listAllRoute = useSelector(selectListRoute)
+    const [listRoute, setListRoute] = useState(listAllRoute)
     const [openAddForm, setOpenAddForm] = useState(false)
     const [toast, addToast] = useState(0)
     const toaster = useRef('')
+    const [active, setActive] = useState(true)
     const dispatch = useDispatch()
     const updateListRoute = () => {
         dispatch(routeThunk.getRoute())
@@ -1453,26 +1648,27 @@ const RouteManagement = () => {
             .catch(() => {})
     }
     useEffect(() => {
-        if (listRoute.length === 0) {
-            setLoading(true)
-            dispatch(routeThunk.getRoute())
+        const getInfor = async () => {
+            if (listRoute.length === 0) {
+                await dispatch(routeThunk.getRoute())
+                    .unwrap()
+                    .then(() => {})
+                    .catch(() => {})
+            }
+            await dispatch(busThunk.getBusType())
                 .unwrap()
-                .then(() => {
-                    dispatch(busThunk.getBusType())
-                        .unwrap()
-                        .then(() => {
-                            setLoading(false)
-                        })
-                        .catch(() => {
-                            setLoading(false)
-                        })
-                })
-                .catch(() => {
-                    setLoading(false)
-                })
+                .then(() => {})
+                .catch(() => {})
         }
+        setLoading(true)
+        getInfor()
+        setLoading(false)
     }, [])
 
+    useEffect(() => {
+        if (active === true) setListRoute(listAllRoute.filter((route) => route.active === true))
+        else setListRoute(listAllRoute.filter((route) => route.active === false))
+    }, [active, listAllRoute])
     return (
         <>
             <CToaster ref={toaster} push={toast} placement="top-end" />
@@ -1481,12 +1677,33 @@ const RouteManagement = () => {
                     <CSpinner />
                 </div>
             )}
+            <div className="mt-2">
+                <CFormCheck
+                    inline
+                    type="radio"
+                    required
+                    id="inactive"
+                    label="Đang hoạt động"
+                    checked={active === true}
+                    onChange={() => setActive(true)}
+                />
+                <CFormCheck
+                    inline
+                    type="radio"
+                    required
+                    id="active"
+                    label="Ngưng hoạt động"
+                    checked={active === false}
+                    onChange={() => setActive(false)}
+                />
+            </div>
             {!loading && listRoute.length > 0 && (
                 <>
                     <div className="d-flex mb-2 align-items-center justify-content-between">
-                        <h3>Danh sách các tuyến xe</h3>
+                        <b>Danh sách các tuyến xe</b>
                         <CButton onClick={() => setOpenAddForm(true)}>Thêm tuyến</CButton>
                     </div>
+
                     {
                         <CAccordion flush>
                             {listRoute.map((route) => (
@@ -1497,9 +1714,9 @@ const RouteManagement = () => {
                 </>
             )}
             {!loading && listRoute.length === 0 && (
-                <>
-                    <h3>Đã có lỗi. Vui lòng thử lại sau</h3>
-                </>
+                <div className="d-flex justify-content-center">
+                    <b>Không có tuyến xe nào</b>
+                </div>
             )}
             {openAddForm && (
                 <RouteCreatForm

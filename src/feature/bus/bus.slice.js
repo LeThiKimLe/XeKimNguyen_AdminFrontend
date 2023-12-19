@@ -27,7 +27,7 @@ const busSlice = createSlice({
             })
             .addCase(busThunk.getBus.fulfilled, (state, action) => {
                 state.loading = false
-                state.listBus = action.payload
+                state.listBus = action.payload ? action.payload : []
             })
             .addCase(busThunk.getBus.rejected, (state) => {
                 state.loading = false

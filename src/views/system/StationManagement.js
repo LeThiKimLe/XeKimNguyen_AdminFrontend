@@ -23,8 +23,18 @@ import {
     CModalBody,
     CModalTitle,
     CModalFooter,
+    CInputGroup,
+    CInputGroupText,
 } from '@coreui/react'
-import { cilPlus, cilPencil, cilOptions, cilSave, cilMediaPlay, cilX } from '@coreui/icons'
+import {
+    cilPlus,
+    cilPencil,
+    cilOptions,
+    cilSave,
+    cilMediaPlay,
+    cilX,
+    cilSearch,
+} from '@coreui/icons'
 import { useDispatch, useSelector } from 'react-redux'
 import locationThunk from 'src/feature/location/location.service'
 import { selectListLocation, selectLoadingState } from 'src/feature/location/location.slice'
@@ -64,30 +74,56 @@ const Station = ({ locationId, station, empty, finishAdd, visibleEmpty }) => {
     const handleMouseLeave = () => {
         setShowDel(false)
     }
-    const getCoordinates = async () => {
-        try {
-            const response = await axios.get(
-                `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
+    // const getCoordinates = async () => {
+    //     try {
+    //         const response = await axios.get(
+    //             `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
+    //                 address,
+    //             )}&key=${apiKey}`,
+    //         )
+    //         const { results } = response.data
+    //         if (results && results.length > 0) {
+    //             const { lat, lng } = results[0].geometry.location
+    //             setLatitude(lat)
+    //             setLongitude(lng)
+    //             setStable(true)
+    //         } else {
+    //             addToast(() => CustomToast({ message: 'Địa chỉ không hợp lệ', type: 'error' }))
+    //             //setStable(false)
+    //             setStable(true)
+    //         }
+    //     } catch (error) {
+    //         console.log(error)
+    //         addToast(() =>
+    //             CustomToast({ message: 'Đã xảy ra lỗi. Vui lòng thử lại sau', type: 'error' }),
+    //         )
+    //     }
+    // }
+    const getCoordinates = () => {
+        axios
+            .get(
+                `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
                     address,
-                )}&key=${apiKey}`,
+                )}&format=json`,
             )
-            const { results } = response.data
-            if (results && results.length > 0) {
-                const { lat, lng } = results[0].geometry.location
-                setLatitude(lat)
-                setLongitude(lng)
-                setStable(true)
-            } else {
-                addToast(() => CustomToast({ message: 'Địa chỉ không hợp lệ', type: 'error' }))
-                //setStable(false)
-                setStable(true)
-            }
-        } catch (error) {
-            console.log(error)
-            addToast(() =>
-                CustomToast({ message: 'Đã xảy ra lỗi. Vui lòng thử lại sau', type: 'error' }),
-            )
-        }
+            .then((response) => {
+                if (response.data && response.data.length > 0) {
+                    const { lat, lon } = response.data[0]
+                    setLatitude(lat)
+                    setLongitude(lon)
+                    setStable(true)
+                } else {
+                    addToast(() => CustomToast({ message: 'Địa chỉ không hợp lệ', type: 'error' }))
+                    setStable(false)
+                }
+            })
+            .catch((error) => {
+                console.error('Error retrieving coordinates:', error)
+                setStable(false)
+                addToast(() =>
+                    CustomToast({ message: 'Đã xảy ra lỗi. Vui lòng thử lại sau', type: 'error' }),
+                )
+            })
     }
     const handleOnChange = (e) => {
         setAddress(e.target.value)
@@ -112,49 +148,69 @@ const Station = ({ locationId, station, empty, finishAdd, visibleEmpty }) => {
                     }),
                 )
             } else {
-                const newStation = {
-                    id: station.id,
-                    name: name,
-                    address: address,
-                    latitude: latitude,
-                    longitude: longitude,
-                }
-                dispatch(stationThunk.editStation(newStation))
-                    .unwrap()
-                    .then(() => {
-                        addToast(() =>
-                            CustomToast({ message: 'Sửa thông tin thành công', type: 'success' }),
-                        )
-                        setIsUpdate(false)
-                    })
-                    .catch((error) => {
-                        addToast(() => CustomToast({ message: error, type: 'error' }))
-                    })
-            }
-        }
-    }
-    const handleAdd = () => {
-        dispatch(
-            stationThunk.addStation({
-                locationId: locationId,
-                listStation: [
-                    {
+                if (name !== '' && address !== '') {
+                    const newStation = {
+                        id: station.id,
                         name: name,
                         address: address,
                         latitude: latitude,
                         longitude: longitude,
-                    },
-                ],
-            }),
-        )
-            .unwrap()
-            .then(() => {
-                addToast(() => CustomToast({ message: 'Thêm trạm đi thành công', type: 'success' }))
-                finishAdd()
-            })
-            .catch((error) => {
-                addToast(() => CustomToast({ message: error, type: 'error' }))
-            })
+                    }
+                    dispatch(stationThunk.editStation(newStation))
+                        .unwrap()
+                        .then(() => {
+                            addToast(() =>
+                                CustomToast({
+                                    message: 'Sửa thông tin thành công',
+                                    type: 'success',
+                                }),
+                            )
+                            setIsUpdate(false)
+                        })
+                        .catch((error) => {
+                            addToast(() => CustomToast({ message: error, type: 'error' }))
+                        })
+                } else {
+                    addToast(() =>
+                        CustomToast({
+                            message: 'Tên và địa chỉ không được để trống',
+                            type: 'error',
+                        }),
+                    )
+                }
+            }
+        }
+    }
+    const handleAdd = () => {
+        if (name !== '' && address !== '') {
+            dispatch(
+                stationThunk.addStation({
+                    locationId: locationId,
+                    listStation: [
+                        {
+                            name: name,
+                            address: address,
+                            latitude: latitude,
+                            longitude: longitude,
+                        },
+                    ],
+                }),
+            )
+                .unwrap()
+                .then(() => {
+                    addToast(() =>
+                        CustomToast({ message: 'Thêm trạm đi thành công', type: 'success' }),
+                    )
+                    finishAdd()
+                })
+                .catch((error) => {
+                    addToast(() => CustomToast({ message: error, type: 'error' }))
+                })
+        } else {
+            addToast(() =>
+                CustomToast({ message: 'Vui lòng điền đủ tên và địa chỉ trạm đi', type: 'error' }),
+            )
+        }
     }
     const cancelAdd = () => {
         finishAdd()
@@ -259,6 +315,7 @@ const Station = ({ locationId, station, empty, finishAdd, visibleEmpty }) => {
                                             onClick={getCoordinates}
                                             variant="outline"
                                             color="success"
+                                            style={{ scale: '0.8' }}
                                         >
                                             Load vị trí
                                         </CButton>
@@ -712,6 +769,7 @@ const StationManagement = () => {
     const [isAdding, setIsAdding] = useState(false)
     const dispatch = useDispatch()
     const emptyLocation = useRef(null)
+    const [searchName, setSearchName] = useState('')
     const [filter, setFilter] = useState('active')
     const getLocation = () => {
         setLoadingLocal(true)
@@ -742,18 +800,46 @@ const StationManagement = () => {
             .catch(() => {})
     }, [])
     useEffect(() => {
-        if (filter === 'all') setFilterList(listLocations)
+        if (filter === 'all')
+            setFilterList(
+                listLocations.filter((location) =>
+                    location.name.toLowerCase().includes(searchName.toLowerCase()),
+                ),
+            )
         else if (filter === 'active')
-            setFilterList(listLocations.filter((location) => location.active === true))
-        else setFilterList(listLocations.filter((location) => location.active === false))
-    }, [filter, listLocations])
+            setFilterList(
+                listLocations.filter(
+                    (location) =>
+                        location.active === true &&
+                        location.name.toLowerCase().includes(searchName.toLowerCase()),
+                ),
+            )
+        else
+            setFilterList(
+                listLocations.filter(
+                    (location) => location.active === false && location.name.includes(searchName),
+                ),
+            )
+    }, [filter, listLocations, searchName])
     return (
         <div>
-            <CRow classNames="align-items-center justify-content-between">
+            <CRow classNames="align-items-center justify-content-between mb-2">
                 <CCol>
                     <h3>Danh sách các trạm xe</h3>
                 </CCol>
-                <CCol style={{ textAlign: 'right' }}>
+                <CCol className="d-flex justify-content-center align-items-center">
+                    <CInputGroup style={{ marginRight: '10px', maxWidth: '250px' }}>
+                        <CInputGroupText>
+                            <CIcon icon={cilSearch} />
+                        </CInputGroupText>
+                        <CFormInput
+                            placeholder="Nhập tên trạm"
+                            name="station name"
+                            type="text"
+                            value={searchName}
+                            onChange={(e) => setSearchName(e.target.value)}
+                        />
+                    </CInputGroup>
                     <CButton color="info" onClick={handleAddLocation}>
                         <CIcon icon={cilPlus}></CIcon>
                         Thêm trạm xe

@@ -116,6 +116,35 @@ const distributeBus = createAsyncThunk(
     },
 )
 
+const getRefreshToken = () => {
+    const user = JSON.parse(localStorage.getItem('current_user'))
+    if (user && user.refreshToken) {
+        return user.refreshToken
+    } else return ''
+}
+
+const deleteDistributeBus = createAsyncThunk(
+    'admin/trips/distribute/bus/delete',
+    async ({ tripId, busId }, thunkAPI) => {
+        try {
+            const result = await axiosClient.delete('admin/trips/distribute', {
+                data: {
+                    tripId: tripId,
+                    busId: [busId],
+                    driverId: [],
+                },
+            })
+            return result
+        } catch (error) {
+            const message =
+                (error.response && error.response.data && error.response.data.message) ||
+                error.message ||
+                error.toString()
+            return thunkAPI.rejectWithValue(message)
+        }
+    },
+)
+
 const getTrips = createAsyncThunk('admin/bus/trips', async (busId, thunkAPI) => {
     try {
         const listTrip = await axiosClient.get('driver/bus/trips', {
@@ -150,6 +179,23 @@ const getSchedules = createAsyncThunk('admin/bus/schedules', async (busId, thunk
     }
 })
 
+const getTripBus = createAsyncThunk('trip/get-bus', async (tripId, thunkAPI) => {
+    try {
+        const response = await axiosClient.get('admin/trips/driver-bus', {
+            params: {
+                tripId: tripId,
+            },
+        })
+        return response.buses
+    } catch (error) {
+        const message =
+            (error.response && error.response.data && error.response.data.message) ||
+            error.message ||
+            error.toString()
+        return thunkAPI.rejectWithValue(message)
+    }
+})
+
 const busThunk = {
     getBus,
     addBus,
@@ -159,5 +205,7 @@ const busThunk = {
     distributeBus,
     getTrips,
     getSchedules,
+    getTripBus,
+    deleteDistributeBus,
 }
 export default busThunk

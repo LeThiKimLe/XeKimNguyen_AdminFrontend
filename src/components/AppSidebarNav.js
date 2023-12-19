@@ -9,6 +9,7 @@ export const AppSidebarNav = ({ items }) => {
     const listCancelRequest = useSelector(selectCancelRequest)
     const location = useLocation()
     const userRole = useSelector(selectUserRoleId)
+    console.log(listCancelRequest)
     const getNumberRequest = () => {
         const numberReq = listCancelRequest.filter((req) => req.state === 'Chờ phê duyệt').length
         if (numberReq > 0) return numberReq
