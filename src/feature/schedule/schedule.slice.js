@@ -8,6 +8,8 @@ const initialState = {
     currentReverseTrip: null,
     currentDateScheduleGo: [],
     currentDateScheduleReturn: [],
+    currentScheduleGo: [],
+    currentScheduleReturn: [],
     currentTurn: 1,
     currentListDriver: [],
     currentListBus: [],
@@ -29,12 +31,14 @@ const scheduleSlice = createSlice({
         setCurrentDateScheduleGo: (state, action) => {
             const listSchedule = action.payload
             state.currentDateScheduleGo = listSchedule.map((schd) => schd.departTime.slice(0, -3))
+            state.currentScheduleGo = listSchedule
         },
         setCurrentDateScheduleReturn: (state, action) => {
             const listSchedule = action.payload
             state.currentDateScheduleReturn = listSchedule.map((schd) =>
                 schd.departTime.slice(0, -3),
             )
+            state.currentScheduleReturn = listSchedule
         },
         setCurrentTurn: (state, action) => {
             state.currentTurn = action.payload
@@ -62,6 +66,8 @@ export const selectCurrentDateScheduleReturn = (state) => state.schedule.current
 export const selectCurrentTurn = (state) => state.schedule.currentTurn
 export const selectCurrentListDriver = (state) => state.schedule.currentListDriver
 export const selectCurrentListBus = (state) => state.schedule.currentListBus
+export const selectCurrentScheduleGo = (state) => state.schedule.currentScheduleGo
+export const selectCurrentScheduleReturn = (state) => state.schedule.currentScheduleReturn
 
 export const scheduleAction = scheduleSlice.actions
 export default scheduleSlice.reducer

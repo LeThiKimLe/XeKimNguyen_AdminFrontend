@@ -79,7 +79,7 @@ const AddStaffForm = ({ visible, setVisible, finishAddStaff }) => {
                     finishAddStaff()
                 })
                 .catch((error) => {
-                    setError(error.toString())
+                    setError(error)
                 })
         }
         setValidated(true)
@@ -436,7 +436,7 @@ const StaffManagement = () => {
                             </div>
                         )}
                         {!loading && (
-                            <CTable striped color="primary">
+                            <CTable striped color="info">
                                 <CTableHead>
                                     <CTableRow>
                                         <CTableHeaderCell scope="col">Mã QTV</CTableHeaderCell>

@@ -116,13 +116,6 @@ const distributeBus = createAsyncThunk(
     },
 )
 
-const getRefreshToken = () => {
-    const user = JSON.parse(localStorage.getItem('current_user'))
-    if (user && user.refreshToken) {
-        return user.refreshToken
-    } else return ''
-}
-
 const deleteDistributeBus = createAsyncThunk(
     'admin/trips/distribute/bus/delete',
     async ({ tripId, busId }, thunkAPI) => {

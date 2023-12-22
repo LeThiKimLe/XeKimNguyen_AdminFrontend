@@ -51,6 +51,7 @@ import AddScheduleForm from './AddScheduleForm'
 import staffThunk from 'src/feature/staff/staff.service'
 import busThunk from 'src/feature/bus/bus.service'
 import { CustomToast } from '../customToast/CustomToast'
+import { AssignScheduleForm } from './AddScheduleForm'
 const ScheduleInfor = ({ visible, setVisible, inSchedule }) => {
     const [schedule, setSchedule] = useState(inSchedule)
     const [toast, addToast] = useState(0)
@@ -71,106 +72,20 @@ const ScheduleInfor = ({ visible, setVisible, inSchedule }) => {
     )
     const [bus, setBus] = useState(schedule.bus ? schedule.bus.id : 0)
     const [note, setNote] = useState(schedule.note)
-    const [eligibleDrivers, setEligibleDrivers] = useState(listDriver)
-    const [eligibleBuses, setEligibleBuses] = useState(listBus)
-    const [allowEditDriver, setAllowEditDriver] = useState(driver !== 0 ? false : true)
-    const [allowEditBus, setAllowEditBus] = useState(bus !== 0 ? false : true)
-    const [scanningBus, setScanningBus] = useState(false)
-    const [scanningDriver, setScanningDriver] = useState(true)
     const [reload, setReload] = useState(false)
-    const validVehicleSchedule = (listDepartTime) => {
-        const newSchd = [...listDepartTime]
-        newSchd.push(schedule)
-        var valid = true
-        newSchd.sort((a, b) => convertTimeToInt(a.departTime) - convertTimeToInt(b.departTime))
-        for (let i = 0; i < newSchd.length - 1; i++) {
-            if (
-                !(
-                    convertTimeToInt(newSchd[i + 1].departTime) >
-                        convertTimeToInt(newSchd[i].departTime) + curRoute + 1 &&
-                    newSchd[i + 1].tripInfor.turn !== newSchd[i].tripInfor.turn
-                )
-            ) {
-                valid = false
-                break
-            }
-        }
-        return valid
-    }
-    //Còn thiếu xác minh từ ngày trước nữa a
-    const scanDriver = async () => {
-        var eligible = []
-        setScanningDriver(true)
-        await Promise.all(
-            listDriver.map(async (driver) => {
-                try {
-                    const res = await dispatch(
-                        staffThunk.getDriverSchedules(driver.driver.driverId),
-                    ).unwrap()
-                    const listSchd = res.filter((schd) => schd.departDate === schedule.departDate)
-                    if (
-                        listSchd.length * curRoute.hours < 10 - curRoute.hours &&
-                        validVehicleSchedule(listSchd)
-                    ) {
-                        eligible.push(driver)
-                    }
-                } catch (error) {
-                    eligible.push(driver)
-                }
-            }),
-        )
-        setEligibleDrivers(eligible)
-        setScanningDriver(false)
-    }
-    const scanBus = async () => {
-        var eligible = []
-        setScanningBus(true)
-        await Promise.all(
-            listBus.map(async (bus) => {
-                try {
-                    const res = await dispatch(busThunk.getSchedules(bus.id)).unwrap()
-                    const listSchd = res.filter((schd) => schd.departDate === schedule.departDate)
-                    if (validVehicleSchedule(listSchd)) {
-                        eligible.push(bus)
-                    }
-                } catch (error) {
-                    eligible.push(bus)
-                }
-            }),
-        )
-        setEligibleBuses(eligible)
-        setScanningBus(false)
-    }
-    const reloadSchedule = () => {
-        dispatch(
-            scheduleThunk.getSchedules({
-                routeId: curRoute.id,
-                departDate: parse(schedule.departDate, 'yyyy-MM-dd'),
-                turn: curTurn,
-            }),
-        )
-            .unwrap()
-            .then((res) => {
-                const item = res.find((schd) => schd.id == schedule.id)
-                setSchedule(item)
-            })
-            .catch(() => {})
-    }
     const handleUpdate = () => {
         if (isUpdate) {
             setLoading(true)
             const scheduleInfor = {
                 id: schedule.id,
-                driver: driver,
-                bus: bus,
+                driver: 0,
+                bus: 0,
                 note: note,
             }
             dispatch(scheduleThunk.updateSchedule(scheduleInfor))
                 .unwrap()
                 .then(() => {
                     setIsUpdate(false)
-                    if (driver !== 0) setAllowEditDriver(false)
-                    if (bus !== 0) setAllowEditBus(false)
                     addToast(() =>
                         CustomToast({
                             message: 'Đã cập nhật thành công',
@@ -194,12 +109,12 @@ const ScheduleInfor = ({ visible, setVisible, inSchedule }) => {
         setLoading(false)
         setIsUpdate(false)
     }
-    useEffect(() => {
-        if (visible === true) {
-            scanDriver()
-            scanBus()
-        }
-    }, [visible])
+    // useEffect(() => {
+    //     if (visible === true) {
+    //         scanDriver()
+    //         scanBus()
+    //     }
+    // }, [visible])
     useEffect(() => {
         if (reload === true) {
             dispatch(
@@ -330,43 +245,16 @@ const ScheduleInfor = ({ visible, setVisible, inSchedule }) => {
                                                 <b>Tài xế</b>
                                             </CFormLabel>
                                             <CCol sm={8}>
-                                                {allowEditDriver && (
-                                                    <CFormSelect
-                                                        value={driver}
-                                                        onChange={(e) =>
-                                                            setDriver(parseInt(e.target.value))
-                                                        }
-                                                        disabled={
-                                                            !scanningDriver &&
-                                                            allowEditDriver &&
-                                                            isUpdate
-                                                                ? false
-                                                                : true
-                                                        }
-                                                    >
-                                                        <option value={0}>Chọn tài xế</option>
-                                                        {eligibleDrivers.map((driverItem) => (
-                                                            <option
-                                                                key={driverItem.driver.driverId}
-                                                                value={driverItem.driver.driverId}
-                                                            >
-                                                                {driverItem.name}
-                                                            </option>
-                                                        ))}
-                                                    </CFormSelect>
-                                                )}
-                                                {!allowEditDriver && (
-                                                    <CFormInput
-                                                        type="note"
-                                                        id="driver"
-                                                        disabled
-                                                        defaultValue={
-                                                            schedule.driverUser
-                                                                ? schedule.driverUser.name
-                                                                : ''
-                                                        }
-                                                    />
-                                                )}
+                                                <CFormInput
+                                                    type="note"
+                                                    id="driver"
+                                                    disabled
+                                                    defaultValue={
+                                                        schedule.driverUser
+                                                            ? schedule.driverUser.name
+                                                            : 'Chưa có tài xế'
+                                                    }
+                                                />
                                             </CCol>
                                         </CRow>
                                         <CRow className="mb-3 justify-content-center">
@@ -377,41 +265,16 @@ const ScheduleInfor = ({ visible, setVisible, inSchedule }) => {
                                                 <b>Bus</b>
                                             </CFormLabel>
                                             <CCol sm={8}>
-                                                {allowEditBus && (
-                                                    <CFormSelect
-                                                        value={bus}
-                                                        onChange={(e) =>
-                                                            setBus(parseInt(e.target.value))
-                                                        }
-                                                        disabled={
-                                                            !scanningBus && allowEditBus && isUpdate
-                                                                ? false
-                                                                : true
-                                                        }
-                                                    >
-                                                        <option value={0}>Chọn bus</option>
-                                                        {eligibleBuses.map((busItem) => (
-                                                            <option
-                                                                key={busItem.id}
-                                                                value={busItem.id}
-                                                            >
-                                                                {busItem.licensePlate}
-                                                            </option>
-                                                        ))}
-                                                    </CFormSelect>
-                                                )}
-                                                {!allowEditBus && (
-                                                    <CFormInput
-                                                        type="note"
-                                                        id="bus"
-                                                        disabled
-                                                        defaultValue={
-                                                            schedule.bus
-                                                                ? schedule.bus.licensePlate
-                                                                : ''
-                                                        }
-                                                    />
-                                                )}
+                                                <CFormInput
+                                                    type="note"
+                                                    id="bus"
+                                                    disabled
+                                                    defaultValue={
+                                                        schedule.bus
+                                                            ? schedule.bus.licensePlate
+                                                            : 'Chưa có xe'
+                                                    }
+                                                />
                                             </CCol>
                                         </CRow>
                                         <div className="w-100 border-top mb-3"></div>
@@ -479,12 +342,19 @@ const ScheduleInfor = ({ visible, setVisible, inSchedule }) => {
 }
 const Schedule = ({ schedule }) => {
     const [showDetail, setShowDetail] = useState(false)
+    const getScheduleColor = () => {
+        if (schedule.bus && schedule.driverUser) return '#08ba41'
+        else if (schedule.bus) return '#ebd764'
+        else if (schedule.driverUser) return '#509de1'
+        else return '#edc7c7'
+    }
     return (
         <>
-            <CTable bordered className="mb-1" color="danger">
+            <CTable bordered className="mb-1">
                 <CTableBody>
                     <CTableRow>
                         <CTableDataCell
+                            style={{ backgroundColor: getScheduleColor() }}
                             className="text-center"
                             role="button"
                             onClick={() => setShowDetail(true)}
@@ -763,6 +633,7 @@ const ScheduleManagement = () => {
     const endDate = endOfWeek(currentDay, { weekStartsOn: 1 })
     const listReverse = useRef([])
     const [openAddForm, setOpenAddForm] = useState(false)
+    const [openAssignForm, setOpenAssignForm] = useState(false)
     const todayScheduleGo = useSelector(selectCurrentDateScheduleGo)
     const todayScheduleReturn = useSelector(selectCurrentDateScheduleReturn)
     const [loading, setLoading] = useState(false)
@@ -885,7 +756,7 @@ const ScheduleManagement = () => {
                     setLoading(false)
                 })
         }
-    }, [currentDay.getDate(), currentDay.getMonth(), currentTrip])
+    }, [currentDay.getDate(), currentDay.getMonth(), currentTrip, reload])
     return (
         <>
             <CRow className="justify-content-between">
@@ -988,13 +859,48 @@ const ScheduleManagement = () => {
                             </TabPanel>
                         </Tabs>
                     </div>
-                    <CustomButton
-                        className="mt-3 mb-3"
-                        onClick={() => setOpenAddForm(true)}
-                        text="Thêm lịch trình"
-                        loading={loading}
-                        disabled={loading}
-                    ></CustomButton>
+                    <div className="d-flex justify-content-between align-items-center">
+                        <div>
+                            <CustomButton
+                                className="mt-3 mb-3"
+                                disabled={
+                                    loading || currentDay.getTime() - new Date().getTime() < 0
+                                }
+                                onClick={() => setOpenAddForm(true)}
+                                text="Thêm lịch trình"
+                                loading={loading}
+                            ></CustomButton>
+                            <CustomButton
+                                className="mt-3 mb-3 mx-2"
+                                onClick={() => setOpenAssignForm(true)}
+                                text="Phân công"
+                                loading={loading}
+                                color="warning"
+                            ></CustomButton>
+                            <CustomButton
+                                className="mt-3 mb-3 mx-2"
+                                onClick={() => finishAdd()}
+                                variant="outline"
+                                color="dark"
+                                text="Reload"
+                                loading={loading}
+                            ></CustomButton>
+                        </div>
+                        <div className="d-flex gap-2">
+                            <CCard style={{ backgroundColor: '#08ba41' }}>
+                                <CCardBody className="p-1">Đã phân công</CCardBody>
+                            </CCard>
+                            <CCard style={{ backgroundColor: '#ebd764' }}>
+                                <CCardBody className="p-1">Đã phân bus</CCardBody>
+                            </CCard>
+                            <CCard style={{ backgroundColor: '#509de1' }}>
+                                <CCardBody className="p-1">Đã phân driver</CCardBody>
+                            </CCard>
+                            <CCard style={{ backgroundColor: '#edc7c7' }}>
+                                <CCardBody className="p-1">Chưa phân công</CCardBody>
+                            </CCard>
+                        </div>
+                    </div>
                 </>
             )}
             <AddScheduleForm
@@ -1006,6 +912,12 @@ const ScheduleManagement = () => {
                 listPreTimeReturn={todayScheduleReturn}
                 finishAdd={finishAdd}
             ></AddScheduleForm>
+            <AssignScheduleForm
+                visible={openAssignForm}
+                setVisible={setOpenAssignForm}
+                currentDay={currentDay}
+                finishAdd={finishAdd}
+            ></AssignScheduleForm>
         </>
     )
 }

@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import busThunk from 'src/feature/bus/bus.service'
-import { selectListBus } from 'src/feature/bus/bus.slice'
+import { busAction, selectListBus, selectRedirect } from 'src/feature/bus/bus.slice'
 import { selectListBusType } from 'src/feature/bus/bus.slice'
 import { CCollapse, CDropdown, CFormCheck, CSpinner } from '@coreui/react'
 import { Tab, Tabs, TabList, TabPanel } from 'react-tabs'
@@ -964,6 +964,12 @@ const OpenForm = ({ visible, setVisible, finishAdd, currentRoute, currentTrip })
     const toaster = useRef('')
     const dispatch = useDispatch()
     const listRoute = useSelector(selectListRoute)
+    const handleDistribute = (busId) => {
+        dispatch(busThunk.distributeBus({ tripId: curTrip, busId: busId }))
+            .unwrap()
+            .then(() => {})
+            .catch(() => {})
+    }
     const handleAddBus = (e) => {
         e.preventDefault()
         setLoading(true)
@@ -975,9 +981,10 @@ const OpenForm = ({ visible, setVisible, finishAdd, currentRoute, currentTrip })
         }
         dispatch(busThunk.addBus(busType))
             .unwrap()
-            .then(() => {
+            .then((res) => {
                 setLoading(false)
                 setVisible(false)
+                if (res.id) handleDistribute(res.id)
                 finishAdd()
             })
             .catch(() => {
@@ -1207,15 +1214,17 @@ const BusManagement = () => {
     const [currentTripBus, setCurrentTripBus] = useState([])
     const listBusType = useSelector(selectListBusType)
     const [showOpenForm, setShowOpenForm] = useState(false)
-    const [option, setOption] = useState('all')
+    const redirect = useSelector(selectRedirect)
+    const [option, setOption] = useState(redirect.currentRoute !== 0 ? 'route' : 'all')
     const [toast, addToast] = useState(0)
     const listRoute = useSelector(selectListRoute)
-    const [currentRoute, setCurrentRoute] = useState(0)
-    const [currentTrip, setCurrentTrip] = useState(0)
+    const [currentRoute, setCurrentRoute] = useState(redirect.currentRoute)
+    const [currentTrip, setCurrentTrip] = useState(redirect.currentTrip)
     const listReverse = useRef([])
     const toaster = useRef('')
     const [loadingBus, setLoadingBus] = useState(false)
     const [activeBus, setActiveBus] = useState(0)
+    const [reload, setReload] = useState(false)
     const reloadListBus = () => {
         dispatch(busThunk.getBus())
             .unwrap()
@@ -1223,7 +1232,7 @@ const BusManagement = () => {
             .catch(() => {})
     }
     const finishAdd = () => {
-        reloadListBus()
+        setReload(true)
         addToast(() => CustomToast({ message: 'Thêm bus thành công', type: 'success' }))
     }
     const getListTrip = (routeId) => {
@@ -1273,14 +1282,15 @@ const BusManagement = () => {
             .catch(() => {})
     }, [])
     const finishUpdate = () => {
-        dispatch(busThunk.getTripBus(currentTrip))
-            .unwrap()
-            .then((res) => {
-                setCurrentTripBus(res)
-            })
-            .catch((error) => {
-                setCurrentTripBus([])
-            })
+        if (currentTrip !== 0)
+            dispatch(busThunk.getTripBus(currentTrip))
+                .unwrap()
+                .then((res) => {
+                    setCurrentTripBus(res)
+                })
+                .catch((error) => {
+                    setCurrentTripBus([])
+                })
     }
     useEffect(() => {
         if (currentTrip !== 0) {
@@ -1298,8 +1308,23 @@ const BusManagement = () => {
         }
     }, [currentTrip])
     useEffect(() => {
-        setCurrentTrip(0)
+        if (redirect.currentRoute === 0) setCurrentTrip(0)
+        else {
+            dispatch(
+                busAction.setRedirect({
+                    currentRoute: 0,
+                    currentTrip: 0,
+                }),
+            )
+        }
     }, [currentRoute])
+    useEffect(() => {
+        if (reload) {
+            reloadListBus()
+            if (currentTrip !== 0) finishUpdate()
+            setReload(false)
+        }
+    }, [reload])
     return (
         <div>
             <CToaster ref={toaster} push={toast} placement="top-end" />

@@ -5,6 +5,7 @@ import {
     CButton,
     CCardBody,
     CCardTitle,
+    CFormCheck,
     CFormSelect,
     CSpinner,
     CTableHead,
@@ -37,6 +38,8 @@ import {
     selectCurrentRoute,
     selectCurrentTrip,
     selectCurrentReverse,
+    selectCurrentScheduleGo,
+    selectCurrentScheduleReturn,
 } from 'src/feature/schedule/schedule.slice'
 import { DateRange } from 'react-date-range'
 import TimePicker from 'react-time-picker'
@@ -47,8 +50,16 @@ import 'react-date-range/dist/styles.css'
 import 'react-date-range/dist/theme/default.css'
 import 'react-time-picker/dist/TimePicker.css'
 import 'react-clock/dist/Clock.css'
-import { addHoursToTime, convertTimeToInt } from 'src/utils/convertUtils'
+import {
+    addHoursToTime,
+    convertTimeToInt,
+    convertToDisplayDate,
+    convertToStampSplit,
+} from 'src/utils/convertUtils'
 import { CustomToast } from '../customToast/CustomToast'
+import { selectCurrentListBus, selectCurrentListDriver } from 'src/feature/schedule/schedule.slice'
+import staffThunk from 'src/feature/staff/staff.service'
+import busThunk from 'src/feature/bus/bus.service'
 const TimeBox = ({ time, removeTime, fix }) => {
     const [showRemove, setShowRemove] = useState(false)
     const handleRemove = () => {
@@ -304,6 +315,7 @@ const AddScheduleForm = ({
         setListTimeReturn(listNew)
         setError('')
     }
+    //Kiểm tra xem nếu thêm lịch vào thì cùng 1 lúc có bao nhiêu xe / tài xế đang cùng hoạt động (ko lớn hơn số cho phép)
     const validAvaiBusDriver = (time) => {
         var count = 0
         listTimeGo.forEach((tme) => {
@@ -524,6 +536,13 @@ const AddScheduleForm = ({
                                                             moveRangeOnFirstSelection={false}
                                                             ranges={dateRange}
                                                             minDate={currentDay}
+                                                            maxDate={
+                                                                new Date(
+                                                                    new Date(currentDay).setMonth(
+                                                                        currentDay.getMonth() + 2,
+                                                                    ),
+                                                                )
+                                                            }
                                                         />
                                                     </div>
                                                 )}
@@ -594,7 +613,7 @@ const AddScheduleForm = ({
                                                 htmlFor="maxSchedule"
                                                 className="col-sm-3 col-form-label"
                                             >
-                                                <b>Số xe tài xế tuyến hiện có</b>
+                                                <b>Số tài xế tuyến hiện có</b>
                                             </CFormLabel>
                                             <CCol sm={3}>
                                                 <CFormInput
@@ -648,6 +667,566 @@ const AddScheduleForm = ({
                                     <div className="col-sm-6">{error !== '' ? error : ''}</div>
                                 </CRow>
                             </CCardFooter>
+                        </CCard>
+                    </CRow>
+                </CModalBody>
+                <CModalFooter>
+                    <CButton
+                        color="secondary"
+                        onClick={() => setVisible(false)}
+                        style={{ width: 'fit-content' }}
+                    >
+                        Đóng
+                    </CButton>
+                </CModalFooter>
+            </CModal>
+        </>
+    )
+}
+
+const AssignScheduleBox = ({ curRoute, curTrip, listGo, listReturn, finishUpdate, currentDay }) => {
+    const [listSchedule, setListSchedule] = useState([])
+    const listDriver = useSelector(selectCurrentListDriver)
+    const listBus = useSelector(selectCurrentListBus)
+    const [listUpdate, setListUpdate] = useState(null)
+    const [listDriverSchedule, setListDriverSchedule] = useState([])
+    const [listBusSchedule, setListBusSchedule] = useState([])
+    const [loading, setLoading] = useState(false)
+    const [autoSchdMode, setAutoSchdMode] = useState(false)
+    const dispatch = useDispatch()
+    const handleAssignBus = (scheduleId, busId) => {
+        const item = listUpdate ? listUpdate[scheduleId] : null
+        setListUpdate({
+            ...listUpdate,
+            [scheduleId]: {
+                driverId: item ? item.driverId : 0,
+                busId: busId,
+            },
+        })
+    }
+    const handleAssignDriver = (scheduleId, driverId) => {
+        const item = listUpdate ? listUpdate[scheduleId] : null
+        setListUpdate({
+            ...listUpdate,
+            [scheduleId]: {
+                driverId: driverId,
+                busId: item ? item.busId : 0,
+            },
+        })
+    }
+    const handleAssignment = () => {
+        console.log(listUpdate)
+        const listRequest = Object.entries(listUpdate)
+        var scheduleInfor = null
+        if (listRequest.length > 0) {
+            setLoading(true)
+            listRequest.forEach((req, index) => {
+                console.log(req)
+                scheduleInfor = {
+                    id: req[0],
+                    bus: req[1].busId,
+                    driver: req[1].driverId,
+                    note: listSchedule.find((schd) => schd.id == req[0]).note,
+                }
+                dispatch(scheduleThunk.updateSchedule(scheduleInfor))
+                    .unwrap()
+                    .then(() => {
+                        setLoading(false)
+                        if (index === listRequest.length - 1) finishUpdate()
+                    })
+                    .catch(() => {
+                        setLoading(false)
+                    })
+            })
+        }
+    }
+    const getDriverValue = (schedule) => {
+        if (schedule.driver !== 0) return schedule.driver
+        else if (listUpdate && listUpdate[schedule.id]) return listUpdate[schedule.id].driverId
+        else return 0
+    }
+    const getBusValue = (schedule) => {
+        if (schedule.bus !== 0) return schedule.bus
+        else if (listUpdate && listUpdate[schedule.id]) return listUpdate[schedule.id].busId
+        else return 0
+    }
+
+    const validVehicleSchedule = (listDepartTime, schedule, prevTrip) => {
+        const newSchd = [...listDepartTime]
+        var valid = true
+        if (newSchd.length > 0) {
+            if (
+                (prevTrip.overflow !== 0 &&
+                    convertTimeToInt(schedule.departTime) - prevTrip.overflow > 1) ||
+                prevTrip.overflow === 0
+            ) {
+                newSchd.push(schedule)
+                valid = true
+                newSchd.sort(
+                    (a, b) => convertTimeToInt(a.departTime) - convertTimeToInt(b.departTime),
+                )
+                // Kiểm tra từng cặp vehicle trip có hợp lệ ko
+                for (let i = 0; i < newSchd.length - 1; i++) {
+                    if (
+                        !(
+                            convertTimeToInt(newSchd[i + 1].departTime) >=
+                                convertTimeToInt(newSchd[i].arrivalTime) + 1 &&
+                            newSchd[i + 1].turn !== newSchd[i].turn
+                        )
+                    ) {
+                        valid = false
+                        break
+                    }
+                }
+            } else {
+                valid = false
+            }
+        } else {
+            if (!prevTrip.turn) valid = true
+            else if (schedule.turn !== prevTrip.turn) valid = true
+            else valid = false
+        }
+        return valid
+    }
+
+    const scanDriver = () => {
+        var listDriverSchd = []
+        var schedules = []
+        listDriver.forEach((driver, index) => {
+            //Tìm chuyến cuối của ngày hôm qua
+            dispatch(staffThunk.getDriverSchedules(driver.driver.driverId))
+                .unwrap()
+                .then((res) => {
+                    schedules = listSchedule.filter(
+                        (schd) => schd.driver === driver.driver.driverId,
+                    )
+                    const yesterday = new Date(currentDay)
+                    const result = res.filter(
+                        (schd) =>
+                            schd.departDate ===
+                            format(yesterday.setDate(currentDay.getDate() - 1), 'yyyy-MM-dd'),
+                    )
+                    result.sort(
+                        (a, b) => convertTimeToInt(b.departTime) - convertTimeToInt(a.departTime),
+                    )
+                    if (result.length > 0)
+                        listDriverSchd.push({
+                            id: driver.driver.driverId,
+                            schedules: schedules,
+                            previous: result[0],
+                        })
+                    else
+                        listDriverSchd.push({
+                            id: driver.driver.driverId,
+                            schedules: schedules,
+                            previous: null,
+                        })
+                    if (index === listDriver.length - 1) setListDriverSchedule(listDriverSchd)
+                })
+                .catch(() => {
+                    schedules = listSchedule.filter(
+                        (schd) => schd.driver === driver.driver.driverId,
+                    )
+                    listDriverSchd.push({
+                        id: driver.driver.driverId,
+                        schedules: schedules,
+                        previous: null,
+                    })
+                    if (index === listDriver.length - 1) setListDriverSchedule(listDriverSchd)
+                })
+        })
+    }
+
+    const scanBus = () => {
+        var listBusSchd = []
+        var schedules = []
+        listBus.forEach((bus, index) => {
+            dispatch(busThunk.getSchedules(bus.id))
+                .unwrap()
+                .then((res) => {
+                    schedules = listSchedule.filter((schd) => schd.bus === bus.id)
+                    const yesterday = new Date(currentDay)
+                    const result = res.filter(
+                        (schd) =>
+                            schd.departDate ===
+                            format(yesterday.setDate(currentDay.getDate() - 1), 'yyyy-MM-dd'),
+                    )
+                    result.sort(
+                        (a, b) => convertTimeToInt(b.departTime) - convertTimeToInt(a.departTime),
+                    )
+                    if (result.length > 0)
+                        listBusSchd.push({
+                            id: bus.id,
+                            schedules: schedules,
+                            previous: result[0],
+                        })
+                    else
+                        listBusSchd.push({
+                            id: bus.id,
+                            schedules: schedules,
+                            previous: null,
+                        })
+                    if (index === listBus.length - 1) setListBusSchedule(listBusSchd)
+                })
+                .catch(() => {
+                    schedules = listSchedule.filter((schd) => schd.bus === bus.id)
+                    listBusSchd.push({
+                        id: bus.id,
+                        schedules: schedules,
+                        previous: null,
+                    })
+                    if (index === listBus.length - 1) setListBusSchedule(listBusSchd)
+                })
+        })
+    }
+    //Xem có bị lố giờ qua ngày hôm sau ko, trả về số giờ lố và ko lố
+    const getOverflowTime = (schd) => {
+        const currentTime = new Date()
+        const time = convertToStampSplit(curRoute.hours)
+        const arrivalTime = new Date(
+            new Date(format(currentTime, 'yyyy-MM-dd') + 'T' + schd.departTime),
+        )
+        arrivalTime.setHours(arrivalTime.getHours() + time.hours)
+        arrivalTime.setMinutes(arrivalTime.getMinutes() + time.minutes)
+        var over = 0
+        if (arrivalTime.getDate() !== currentTime.getDate()) {
+            over = convertTimeToInt(arrivalTime.getHours() + ':' + arrivalTime.getMinutes())
+            return {
+                remain: curRoute.hours - over,
+                overflow: over,
+            }
+        }
+        return {
+            remain: 0,
+            overflow: 0,
+        }
+    }
+
+    const verifyDriverSchedule = (driverSchedule, schd) => {
+        var previousTrip = {
+            overflow: 0,
+        }
+        var remainEndTime = 0
+        // Xem chuyến trễ nhất hôm qua có lố giờ qua hôm nay không
+        if (driverSchedule.previous) {
+            previousTrip = {
+                overflow: getOverflowTime(driverSchedule.previous).overflow,
+                turn: driverSchedule.previous.turn,
+            }
+        }
+        //Xem chuyến trễ nhất hôm nay có lố giờ qua ngày mai ko (nếu có thì ko thêm đc nữa)
+        if (driverSchedule.schedules.length > 0) {
+            remainEndTime = getOverflowTime(
+                driverSchedule.schedules[driverSchedule.schedules.length - 1],
+            ).remain
+            if (remainEndTime !== 0) return false
+        }
+        // Xem chuyến được thêm có thể lố giờ qua ngày mai ko
+        var remainEndTimeNew = getOverflowTime(schd).remain
+        if (remainEndTimeNew !== 0) {
+            if (
+                driverSchedule.schedules.length * (curRoute.hours + 1) + remainEndTimeNew <
+                    10 - previousTrip.overflow &&
+                validVehicleSchedule(driverSchedule.schedules, schd, previousTrip)
+            )
+                return true
+            return false
+        } else {
+            if (
+                (driverSchedule.schedules.length + 1) * (curRoute.hours + 1) <=
+                    10 - previousTrip.overflow &&
+                validVehicleSchedule(driverSchedule.schedules, schd, previousTrip)
+            )
+                return true
+            return false
+        }
+    }
+
+    const verifyBusSchedule = (busSchedule, schd) => {
+        var previousTrip = {
+            overflow: 0,
+        }
+        var remainEndTime = 0
+        // Xem chuyến trễ nhất hôm qua có lố giờ qua hôm nay không
+        if (busSchedule.previous) {
+            previousTrip = {
+                overflow: getOverflowTime(busSchedule.previous).overflow,
+                turn: busSchedule.previous.turn,
+            }
+        }
+        //Xem chuyến trễ nhất hôm nay có lố giờ qua ngày mai ko
+        if (busSchedule.schedules.length > 0) {
+            remainEndTime = getOverflowTime(
+                busSchedule.schedules[busSchedule.schedules.length - 1],
+            ).remain
+            if (remainEndTime !== 0) return false
+        }
+        //Xem chuyến định thêm có lố giờ ko
+        var remainEndTimeNew = getOverflowTime(schd).remain
+        console.log(remainEndTimeNew)
+        if (remainEndTimeNew !== 0) {
+            if (
+                busSchedule.schedules.length * (curRoute.hours + 1) + remainEndTimeNew <=
+                    24 - previousTrip.overflow &&
+                validVehicleSchedule(busSchedule.schedules, schd, previousTrip)
+            )
+                return true
+            return false
+        } else {
+            if (
+                (busSchedule.schedules.length + 1) * (curRoute.hours + 1) <
+                    24 - previousTrip.overflow &&
+                validVehicleSchedule(busSchedule.schedules, schd, previousTrip)
+            )
+                return true
+            return false
+        }
+    }
+
+    const autoScheduling = () => {
+        var autoSchd = null
+        var listDriverScheduleIn = [...listDriverSchedule]
+        var listBusScheduleIn = [...listBusSchedule]
+        listSchedule.forEach((schd) => {
+            if (schd.allowChange) {
+                for (let i = 0; i < listDriverScheduleIn.length; i++) {
+                    if (verifyDriverSchedule(listDriverScheduleIn[i], schd)) {
+                        autoSchd = {
+                            ...autoSchd,
+                            [schd.id]: {
+                                driverId: listDriverScheduleIn[i].id,
+                                busId: autoSchd && autoSchd[schd.id] ? autoSchd[schd.id].busId : 0,
+                            },
+                        }
+                        listDriverScheduleIn[i].schedules.push(schd)
+                        break
+                    }
+                }
+                for (let i = 0; i < listBusScheduleIn.length; i++) {
+                    if (verifyBusSchedule(listBusScheduleIn[i], schd)) {
+                        autoSchd = {
+                            ...autoSchd,
+                            [schd.id]: {
+                                driverId:
+                                    autoSchd && autoSchd[schd.id] ? autoSchd[schd.id].driverId : 0,
+                                busId: listBusScheduleIn[i].id,
+                            },
+                        }
+                        listBusScheduleIn[i].schedules.push(schd)
+                        break
+                    }
+                }
+            }
+        })
+        setListUpdate(autoSchd)
+    }
+
+    useEffect(() => {
+        const sumTrip = []
+        listGo.forEach((item) => {
+            sumTrip.push({
+                id: item.id,
+                departTime: item.departTime.slice(0, -3),
+                arrivalTime: addHoursToTime(item.departTime, curRoute.hours),
+                turn: 1,
+                driver: item.driverUser ? item.driverUser.driver.driverId : 0,
+                bus: item.bus ? item.bus.id : 0,
+                note: item.note,
+                allowChange: !item.driverUser || !item.bus,
+            })
+        })
+        listReturn.forEach((item) => {
+            sumTrip.push({
+                id: item.id,
+                departTime: item.departTime.slice(0, -3),
+                arrivalTime: addHoursToTime(item.departTime, curRoute.hours),
+                turn: 0,
+                driver: item.driverUser ? item.driverUser.driver.driverId : 0,
+                bus: item.bus ? item.bus.id : 0,
+                note: item.note,
+                allowChange: !item.driverUser || !item.bus,
+            })
+        })
+        sumTrip.sort((a, b) => convertTimeToInt(a.departTime) - convertTimeToInt(b.departTime))
+        setListSchedule(sumTrip)
+    }, [listGo.length, listReturn.length])
+    useEffect(() => {
+        scanBus()
+        scanDriver()
+    }, [listSchedule.length])
+    useEffect(() => {
+        if (autoSchdMode) autoScheduling()
+    }, [autoSchdMode])
+    return (
+        <>
+            <b>{`Trạm A: ${curTrip.startStation.name} `}</b>
+            <span>{` || `}</span>
+            <b>{` Trạm B: ${curTrip.endStation.name}`}</b>
+            <CFormCheck
+                id="auto"
+                label="Phân công tự động"
+                className="mt-3"
+                checked={autoSchdMode}
+                onChange={() => setAutoSchdMode(!autoSchdMode)}
+            />
+            <br></br>
+            <CTable>
+                <CTableHead>
+                    <CTableRow>
+                        <CTableHeaderCell scope="col">#</CTableHeaderCell>
+                        <CTableHeaderCell className="text-center" scope="col">
+                            Khởi hành
+                        </CTableHeaderCell>
+                        <CTableHeaderCell className="text-center" scope="col">
+                            Kết thúc
+                        </CTableHeaderCell>
+                        <CTableHeaderCell className="text-center" scope="col">
+                            Trạm đi
+                        </CTableHeaderCell>
+                        <CTableHeaderCell className="text-center" scope="col">
+                            Trạm đến
+                        </CTableHeaderCell>
+                        <CTableHeaderCell className="text-center" scope="col">
+                            Tài xế
+                        </CTableHeaderCell>
+                        <CTableHeaderCell className="text-center" scope="col">
+                            Bus
+                        </CTableHeaderCell>
+                    </CTableRow>
+                </CTableHead>
+                <CTableBody>
+                    {listSchedule.map((schedule, index) => (
+                        <CTableRow key={index}>
+                            <CTableHeaderCell scope="row">{index + 1}</CTableHeaderCell>
+                            <CTableDataCell className="text-center">
+                                {schedule.departTime}
+                            </CTableDataCell>
+                            <CTableDataCell className="text-center">
+                                {schedule.arrivalTime}
+                            </CTableDataCell>
+                            <CTableDataCell className="text-center">
+                                {schedule.turn === 1 ? 'A' : 'B'}
+                            </CTableDataCell>
+                            <CTableDataCell className="text-center">
+                                {schedule.turn === 1 ? 'B' : 'A'}
+                            </CTableDataCell>
+                            <CTableDataCell className="text-center">
+                                <CFormSelect
+                                    value={getDriverValue(schedule)}
+                                    disabled={autoSchdMode || schedule.driver !== 0}
+                                    onChange={(e) =>
+                                        handleAssignDriver(schedule.id, parseInt(e.target.value))
+                                    }
+                                >
+                                    <option value="0">Chọn driver</option>
+                                    {listDriver.map((driver, index) => (
+                                        <option key={index} value={driver.driver.driverId}>
+                                            {driver.name}
+                                        </option>
+                                    ))}
+                                </CFormSelect>
+                            </CTableDataCell>
+                            <CTableDataCell className="text-center">
+                                <CFormSelect
+                                    value={getBusValue(schedule)}
+                                    disabled={autoSchdMode || schedule.bus !== 0}
+                                    onChange={(e) =>
+                                        handleAssignBus(schedule.id, parseInt(e.target.value))
+                                    }
+                                >
+                                    <option value="0">Chọn bus</option>
+                                    {listBus.map((bus, index) => (
+                                        <option key={index} value={bus.id}>
+                                            {bus.licensePlate}
+                                        </option>
+                                    ))}
+                                </CFormSelect>
+                            </CTableDataCell>
+                        </CTableRow>
+                    ))}
+                </CTableBody>
+            </CTable>
+            <CustomButton
+                loading={loading}
+                text="Lưu thông tin"
+                onClick={() => handleAssignment()}
+            ></CustomButton>
+        </>
+    )
+}
+
+export const AssignScheduleForm = ({ visible, setVisible, currentDay, finishAdd }) => {
+    const curTrip = useSelector(selectCurrentTrip)
+    const curRoute = useSelector(selectCurrentRoute)
+    const curReverse = useSelector(selectCurrentReverse)
+    const listGo = useSelector(selectCurrentScheduleGo)
+    const listReturn = useSelector(selectCurrentScheduleReturn)
+    const dispatch = useDispatch()
+    const [toast, addToast] = useState(0)
+    const toaster = useRef('')
+    const finishUpdate = () => {
+        addToast(() =>
+            CustomToast({
+                message: 'Đã phân công thành công',
+                type: 'success',
+            }),
+        )
+        setVisible(false)
+        finishAdd()
+    }
+    //Kiểm tra xem nếu thêm lịch vào thì cùng 1 lúc có bao nhiêu xe / tài xế đang cùng hoạt động (ko lớn hơn số cho phép)
+    // const validAvaiBusDriver = (time) => {
+    //     var count = 0
+    //     listTimeGo.forEach((tme) => {
+    //         if (Math.abs(convertTimeToInt(time) - convertTimeToInt(tme.time) < curRoute.hours + 1))
+    //             count = count + 1
+    //     })
+    //     listTimeReturn.forEach((tme) => {
+    //         if (Math.abs(convertTimeToInt(time) - convertTimeToInt(tme.time) < curRoute.hours + 1))
+    //             count = count + 1
+    //     })
+    //     if (count < tripInfor.busCount && count < tripInfor.driverCount) return true
+    //     else return false
+    // }
+
+    return (
+        <>
+            <CToaster ref={toaster} push={toast} placement="top-end" />
+            <CModal
+                alignment="center"
+                backdrop="static"
+                scrollable
+                visible={visible}
+                size="xl"
+                onClose={() => setVisible(false)}
+            >
+                <CModalHeader>
+                    <CModalTitle>Phân công thực hiện chuyến xe</CModalTitle>
+                </CModalHeader>
+                <CModalBody>
+                    <CRow>
+                        <CCard className="p-0">
+                            <CCardHeader className="bg-info">
+                                <b>{`Bảng lịch trình ngày ${format(currentDay, 'dd/MM/yyyy')}`}</b>
+                            </CCardHeader>
+                            {curRoute && curTrip && curReverse && (
+                                <CCardBody>
+                                    <CForm className="w-100">
+                                        <CRow className="mb-3 justify-content-center">
+                                            <CCol sm={10}>
+                                                <AssignScheduleBox
+                                                    curRoute={curRoute}
+                                                    curTrip={curTrip}
+                                                    listGo={listGo}
+                                                    listReturn={listReturn}
+                                                    finishUpdate={finishUpdate}
+                                                    currentDay={currentDay}
+                                                ></AssignScheduleBox>
+                                            </CCol>
+                                        </CRow>
+                                    </CForm>
+                                </CCardBody>
+                            )}
                         </CCard>
                     </CRow>
                 </CModalBody>

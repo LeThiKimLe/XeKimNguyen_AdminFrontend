@@ -91,7 +91,6 @@ const changePassword = createAsyncThunk(
             return response
         } catch (error) {
             const message =
-                'Sai mật khẩu cũ' ||
                 (error.response && error.response.data && error.response.data.message) ||
                 error.message ||
                 error.toString()

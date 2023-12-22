@@ -5,11 +5,20 @@ const initialState = {
     listBus: [],
     loading: false,
     listBusType: [],
+    redirect: {
+        currentRoute: 0,
+        currentTrip: 0,
+    },
 }
 
 const busSlice = createSlice({
     name: 'bus',
     initialState,
+    reducers: {
+        setRedirect: (state, action) => {
+            state.redirect = action.payload
+        },
+    },
     extraReducers: (builder) => {
         builder
             .addCase(busThunk.getBusType.pending, (state) => {
@@ -74,4 +83,7 @@ const busSlice = createSlice({
 export const selectListBus = (state) => state.bus.listBus
 export const selectLoadingState = (state) => state.bus.loading
 export const selectListBusType = (state) => state.bus.listBusType
+export const selectRedirect = (state) => state.bus.redirect
+
+export const busAction = busSlice.actions
 export default busSlice.reducer

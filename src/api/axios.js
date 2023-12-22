@@ -108,8 +108,8 @@ axiosClient.interceptors.response.use(
                         originalRequest.headers.Authorization = `Bearer ${token}`
                         return axiosClient(originalRequest)
                     })
-                    .catch((error) => {
-                        console.log(error)
+                    .catch((refreshError) => {
+                        isRefreshing = false
                         return Promise.reject(error)
                     })
             } else {

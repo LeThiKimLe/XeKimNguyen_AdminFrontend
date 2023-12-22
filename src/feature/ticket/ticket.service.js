@@ -39,7 +39,6 @@ const changeTicket = createAsyncThunk(
             return response
         } catch (error) {
             const message =
-                'Không thỏa điều kiện đổi vé' ||
                 (error.response && error.response.data && error.response.data.message) ||
                 error.message ||
                 error.toString()
@@ -118,7 +117,6 @@ const searchTicket = createAsyncThunk('staff/bookings/search-tel', async (tel, t
         return response
     } catch (error) {
         const message =
-            'Không tìm thấy thông tin' ||
             (error.response && error.response.data && error.response.data.message) ||
             error.message ||
             error.toString()

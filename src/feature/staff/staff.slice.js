@@ -8,6 +8,10 @@ const initialState = {
     currentStaff: null,
     currentDriver: null,
     listAdmins: [],
+    redirect: {
+        currentRoute: 0,
+        currentTrip: 0,
+    },
 }
 
 const staffSlice = createSlice({
@@ -19,6 +23,9 @@ const staffSlice = createSlice({
         },
         setCurrentDriver: (state, action) => {
             state.currentDriver = action.payload
+        },
+        setRedirect: (state, action) => {
+            state.redirect = action.payload
         },
     },
     extraReducers: (builder) => {
@@ -107,6 +114,8 @@ export const selectListDriver = (state) => state.staff.listDrivers
 export const selectCurrentStaff = (state) => state.staff.currentStaff
 export const selectCurrentDriver = (state) => state.staff.currentDriver
 export const selectListAdmin = (state) => state.staff.listAdmins
+export const selectRedirect = (state) => state.staff.redirect
+
 export const staffAction = staffSlice.actions
 
 export default staffSlice.reducer

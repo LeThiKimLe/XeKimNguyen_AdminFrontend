@@ -20,7 +20,6 @@ const requestSlice = createSlice({
             })
             .addCase(requestThunk.getTicketCancelRequest.fulfilled, (state, action) => {
                 state.loading = false
-                console.log(action.payload)
                 state.listCancelRequest = action.payload ? action.payload : []
             })
             .addCase(requestThunk.getTicketCancelRequest.rejected, (state, action) => {

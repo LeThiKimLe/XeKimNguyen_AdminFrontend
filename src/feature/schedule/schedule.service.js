@@ -104,12 +104,88 @@ const updateSchedule = createAsyncThunk('admin/schedules/edit', async (scheduleI
     }
 })
 
+const getNotDistributeDriver = createAsyncThunk(
+    'admin/driver/not-distribute',
+    async (tripId, thunkAPI) => {
+        try {
+            const response = await axiosClient.get('/admin/drivers/not-distribute')
+            return response
+        } catch (error) {
+            const message =
+                (error.response && error.response.data && error.response.data.message) ||
+                error.message ||
+                error.toString()
+            return thunkAPI.rejectWithValue(message)
+        }
+    },
+)
+
+const getNotDistributeBus = createAsyncThunk(
+    'admin/bus/not-distribute',
+    async (tripId, thunkAPI) => {
+        try {
+            const response = await axiosClient.get('/admin/bus/not-distribute')
+            return response
+        } catch (error) {
+            const message =
+                (error.response && error.response.data && error.response.data.message) ||
+                error.message ||
+                error.toString()
+            return thunkAPI.rejectWithValue(message)
+        }
+    },
+)
+
+const distributeBus = createAsyncThunk(
+    'admin/distribute/bus',
+    async ({ tripId, listBus }, thunkAPI) => {
+        try {
+            const bus = await axiosClient.post('admin/trips/distribute', {
+                tripId: tripId,
+                busId: listBus,
+                driverId: [],
+            })
+            return bus
+        } catch (error) {
+            const message =
+                (error.response && error.response.data && error.response.data.message) ||
+                error.message ||
+                error.toString()
+            return thunkAPI.rejectWithValue(message)
+        }
+    },
+)
+
+const distributeDriver = createAsyncThunk(
+    'admin/distribute/driver',
+    async ({ tripId, listDriver }, thunkAPI) => {
+        try {
+            const bus = await axiosClient.post('admin/trips/distribute', {
+                tripId: tripId,
+                busId: [],
+                driverId: listDriver,
+            })
+            return bus
+        } catch (error) {
+            const message =
+                (error.response && error.response.data && error.response.data.message) ||
+                error.message ||
+                error.toString()
+            return thunkAPI.rejectWithValue(message)
+        }
+    },
+)
+
 const scheduleThunk = {
     getSchedules,
     handleSchedule,
     getMaxSchedules,
     getTripBusDriver,
     updateSchedule,
+    getNotDistributeBus,
+    getNotDistributeDriver,
+    distributeBus,
+    distributeDriver,
 }
 
 export default scheduleThunk

@@ -130,6 +130,8 @@ const DetailDriver = () => {
     const [showDistribute, setShowDistribute] = useState(false)
     const listRoute = useSelector(selectListRoute)
     const [validateDistribute, setValidateDistribute] = useState(false)
+    const [openDel, setOpenDel] = useState(false)
+    const [loadingDel, setLoadingDel] = useState(false)
     const handleUpImage = (e) => {
         setFile(URL.createObjectURL(e.target.files[0]))
         setImg(e.target.files[0])
@@ -180,6 +182,28 @@ const DetailDriver = () => {
         } else {
             setIsUpdating(true)
         }
+    }
+    const handleDeleteDistribute = (e) => {
+        setLoadingDel(true)
+        dispatch(
+            staffThunk.deleteDistributeDriver({
+                tripId: listTrip[0].id,
+                driverId: currentDriver.driver.driverId,
+            }),
+        )
+            .unwrap()
+            .then(() => {
+                setLoadingDel(false)
+                reloadListTrip()
+                addToast(() =>
+                    CustomToast({ message: 'Đã hủy phân tuyến cho tài xế', type: 'success' }),
+                )
+                setOpenDel(false)
+            })
+            .catch((error) => {
+                addToast(() => CustomToast({ message: error, type: 'error' }))
+                setLoadingDel(false)
+            })
     }
     const reset = () => {
         setValidated(false)
@@ -245,7 +269,9 @@ const DetailDriver = () => {
             .then((res) => {
                 setListTrip(res)
             })
-            .catch(() => {})
+            .catch(() => {
+                setListTrip([])
+            })
     }
 
     const getListTrip = (routeId) => {
@@ -662,16 +688,22 @@ const DetailDriver = () => {
                                                                         <option value={0}>
                                                                             Chọn một tuyến đường
                                                                         </option>
-                                                                        {listRoute.map((rte) => (
-                                                                            <option
-                                                                                key={rte.id}
-                                                                                value={rte.id}
-                                                                            >
-                                                                                {getRouteJourney(
-                                                                                    rte,
-                                                                                )}
-                                                                            </option>
-                                                                        ))}
+                                                                        {listRoute
+                                                                            .filter(
+                                                                                (rt) =>
+                                                                                    rt.active ===
+                                                                                    true,
+                                                                            )
+                                                                            .map((rte) => (
+                                                                                <option
+                                                                                    key={rte.id}
+                                                                                    value={rte.id}
+                                                                                >
+                                                                                    {getRouteJourney(
+                                                                                        rte,
+                                                                                    )}
+                                                                                </option>
+                                                                            ))}
                                                                     </CFormSelect>
                                                                     {route !== 0 && (
                                                                         <>
@@ -729,6 +761,47 @@ const DetailDriver = () => {
                                                     <CCard className="p-3">
                                                         <b>Hoạt động tuyến: </b>
                                                         <b>{getTripJourney(listTrip[0])}</b>
+                                                        <CButton
+                                                            variant="outline"
+                                                            color="danger"
+                                                            onClick={() => setOpenDel(true)}
+                                                            style={{
+                                                                width: 'max-content',
+                                                                marginTop: '10px',
+                                                            }}
+                                                        >
+                                                            Xóa phân công
+                                                        </CButton>
+                                                        <CCollapse
+                                                            visible={openDel}
+                                                            className="mt-2"
+                                                        >
+                                                            <CCard>
+                                                                <CCardBody>
+                                                                    <b>
+                                                                        Xác nhận xóa tuyến này khỏi
+                                                                        phân công của tài xế?
+                                                                    </b>
+                                                                    <div className="d-flex align-items-center gap-2 mt-2">
+                                                                        <CustomButton
+                                                                            text="Xác nhận"
+                                                                            loading={loadingDel}
+                                                                            onClick={
+                                                                                handleDeleteDistribute
+                                                                            }
+                                                                        ></CustomButton>
+                                                                        <CButton
+                                                                            variant="outline"
+                                                                            onClick={() =>
+                                                                                setOpenDel(false)
+                                                                            }
+                                                                        >
+                                                                            Hủy
+                                                                        </CButton>
+                                                                    </div>
+                                                                </CCardBody>
+                                                            </CCard>
+                                                        </CCollapse>
                                                     </CCard>
                                                 )}
                                                 <div className="w-100 border-top border-1 mt-3 mb-3"></div>

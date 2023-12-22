@@ -39,11 +39,13 @@ const Login = () => {
     const toaster = useRef()
     const loginForm = useRef()
     const userRole = useSelector(selectUserRoleId)
+    const loginCount = useRef(0)
 
     const handleLogin = (e) => {
         if (loginForm.current.checkValidity()) {
             localStorage.removeItem('current_user')
             e.preventDefault()
+            loginCount.current = loginCount.current + 1
             dispatch(
                 authThunk.login({
                     username: valuesLogin['username'],
@@ -55,7 +57,6 @@ const Login = () => {
                     dispatch(authActions.reset())
                 })
                 .catch((error) => {
-                    console.log(error)
                     addToast(() => CustomToast({ message: error, type: 'error' }))
                 })
         } else {

@@ -153,6 +153,28 @@ const distributeDriver = createAsyncThunk(
     },
 )
 
+const deleteDistributeDriver = createAsyncThunk(
+    'admin/trips/distribute/driver/delete',
+    async ({ tripId, driverId }, thunkAPI) => {
+        try {
+            const result = await axiosClient.delete('admin/trips/distribute', {
+                data: {
+                    tripId: tripId,
+                    busId: [],
+                    driverId: [driverId],
+                },
+            })
+            return result
+        } catch (error) {
+            const message =
+                (error.response && error.response.data && error.response.data.message) ||
+                error.message ||
+                error.toString()
+            return thunkAPI.rejectWithValue(message)
+        }
+    },
+)
+
 const getDriverTrip = createAsyncThunk('driver/trips', async (driverId, thunkAPI) => {
     try {
         const trips = await axiosClient.get('driver/trips', {
@@ -216,6 +238,23 @@ const getAdmins = createAsyncThunk('admin/admins', async (_, thunkAPI) => {
     }
 })
 
+const getTripDriver = createAsyncThunk('trip/get-bus', async (tripId, thunkAPI) => {
+    try {
+        const response = await axiosClient.get('admin/trips/driver-bus', {
+            params: {
+                tripId: tripId,
+            },
+        })
+        return response.drivers
+    } catch (error) {
+        const message =
+            (error.response && error.response.data && error.response.data.message) ||
+            error.message ||
+            error.toString()
+        return thunkAPI.rejectWithValue(message)
+    }
+})
+
 const staffThunk = {
     getStaffs,
     addStaff,
@@ -228,5 +267,7 @@ const staffThunk = {
     distributeDriver,
     getDriverTrip,
     getDriverSchedules,
+    getTripDriver,
+    deleteDistributeDriver,
 }
 export default staffThunk
