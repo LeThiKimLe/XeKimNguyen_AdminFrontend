@@ -661,7 +661,7 @@ const ScheduleManagement = () => {
                 })
             }
         })
-        return listTrip
+        return listTrip.filter((tp) => tp.active === true)
     }
     const handleSelectRoute = (routeId) => {
         setCurrentRoute(routeId)
