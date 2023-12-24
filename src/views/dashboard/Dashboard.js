@@ -46,7 +46,6 @@ import {
     cilUserFemale,
 } from '@coreui/icons'
 
-import WidgetsBrand from '../widgets/WidgetsBrand'
 import StatisticsWidget from './StatisticsWidget'
 import stationThunk from 'src/feature/station/station.service'
 import { selectCurrentMonthStatistics } from 'src/feature/statistics/statistics.slice'
