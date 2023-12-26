@@ -31,6 +31,8 @@ import {
     CImage,
     CCollapse,
     CFormCheck,
+    CButtonGroup,
+    CTableFoot,
 } from '@coreui/react'
 import DatePicker from 'react-datepicker'
 import CustomButton from '../customButton/CustomButton'
@@ -41,57 +43,352 @@ import { selectListRoute } from 'src/feature/route/route.slice'
 import { getTripJourney, getRouteJourney } from 'src/utils/tripUtils'
 import format from 'date-fns/format'
 import routeThunk from 'src/feature/route/route.service'
-import { convertToDisplayDate } from 'src/utils/convertUtils'
-
-const DriverScheduleHistory = ({ listSchedule }) => {
-    const sortTime = (a, b) => {
-        const timeA = new Date(a.departDate + 'T' + a.departTime)
-        const timeB = new Date(b.departDate + 'T' + b.departTime)
-        return timeA.getTime() - timeB.getTime()
+import { convertTimeToInt, convertToDisplayDate } from 'src/utils/convertUtils'
+import { startOfWeek, endOfWeek, parse } from 'date-fns'
+import { dayInWeek } from 'src/utils/constants'
+import 'react-datepicker/dist/react-datepicker.css'
+const ScheduleWrap = ({ schedule }) => {
+    const getScheduleColor = () => {
+        if (schedule.turn === true) return 'success'
+        else return 'warning'
     }
     return (
-        <CTable>
-            <CTableHead>
-                <CTableRow>
-                    <CTableHeaderCell scope="col">#</CTableHeaderCell>
-                    <CTableHeaderCell className="text-center" scope="col">
-                        Ngày khởi hành
-                    </CTableHeaderCell>
-                    <CTableHeaderCell className="text-center" scope="col">
-                        Giờ khởi hành
-                    </CTableHeaderCell>
-                    <CTableHeaderCell className="text-center" scope="col">
-                        Giờ kết thúc
-                    </CTableHeaderCell>
-                    <CTableHeaderCell className="text-center" scope="col">
-                        Xe bus
-                    </CTableHeaderCell>
-                </CTableRow>
-            </CTableHead>
+        <CTable bordered className="mb-1">
             <CTableBody>
-                {listSchedule
-                    .sort((a, b) => sortTime(a, b))
-                    .map((schedule, index) => (
-                        <CTableRow key={index}>
-                            <CTableHeaderCell scope="row">{index + 1}</CTableHeaderCell>
-                            <CTableDataCell className="text-center">
-                                {convertToDisplayDate(schedule.departDate)}
-                            </CTableDataCell>
-                            <CTableDataCell className="text-center">
-                                {schedule.departTime.slice(0, -3)}
-                            </CTableDataCell>
-                            <CTableDataCell className="text-center">
-                                {schedule.finishTime === '00:00:00'
-                                    ? 'Đang cập nhật'
-                                    : schedule.finishTime.slice(0, -3)}
-                            </CTableDataCell>
-                            <CTableDataCell className="text-center">
-                                {schedule.bus ? schedule.bus.licensePlate : 'Đang cập nhật'}
-                            </CTableDataCell>
-                        </CTableRow>
-                    ))}
+                <CTableRow>
+                    <CTableDataCell className="text-center p-0">
+                        <CCard color={getScheduleColor()} style={{ borderRadius: '0' }}>
+                            <CCardBody className="p-1">
+                                <b>{schedule.departTime.slice(0, -3)}</b>
+                                <br></br>
+                                <span>{schedule.bus ? schedule.bus.licensePlate : '---'}</span>
+                            </CCardBody>
+                        </CCard>
+                    </CTableDataCell>
+                </CTableRow>
             </CTableBody>
         </CTable>
+    )
+}
+const DriverScheduleHistory = ({ listSchedule, listTrip }) => {
+    const [turnList, setTurnList] = useState(listSchedule)
+    const [currentList, setCurrentList] = useState(listSchedule)
+    const [listForm, setListForm] = useState('list')
+    const [currentDay, setCurrentDay] = useState(new Date())
+    const [startDate, setStartDate] = useState(startOfWeek(currentDay, { weekStartsOn: 1 }))
+    const [endDate, setEndDate] = useState(endOfWeek(currentDay, { weekStartsOn: 1 }))
+    const sortTime = (a, b) => {
+        const timeA = new Date(a.departDate + 'T' + a.departTime).getTime()
+        const timeB = new Date(b.departDate + 'T' + b.departTime).getTime()
+        const today = new Date().getTime()
+        const distanceA = timeA - today
+        const distanceB = timeB - today
+        const diff = Math.abs(distanceA) - Math.abs(distanceB)
+        if (distanceA > 0 && distanceB < 0) return -1
+        else if (distanceA < 0 && distanceB > 0) return 1
+        else {
+            if (diff < 0) return -1
+            else if (diff > 0) return 1
+            else return 0
+        }
+    }
+    const filterTime = (listSchd, time) => {
+        if (time === 'morning')
+            return listSchd.filter(
+                (schd) =>
+                    convertTimeToInt(schd.departTime) >= 6 &&
+                    convertTimeToInt(schd.departTime) < 12,
+            )
+        else if (time === 'afternoon')
+            return listSchd.filter(
+                (schd) =>
+                    convertTimeToInt(schd.departTime) >= 12 &&
+                    convertTimeToInt(schd.departTime) < 18,
+            )
+        else if (time === 'evening')
+            return listSchd.filter(
+                (schd) =>
+                    convertTimeToInt(schd.departTime) >= 18 &&
+                    convertTimeToInt(schd.departTime) < 24,
+            )
+        else
+            return listSchd.filter(
+                (schd) =>
+                    convertTimeToInt(schd.departTime) >= 0 && convertTimeToInt(schd.departTime) < 6,
+            )
+    }
+    const validDate = (schd, index) => {
+        const dayStart = new Date(startDate)
+        const schdDate = new Date(schd.departDate).getDate()
+        const weekDate = new Date(dayStart.setDate(dayStart.getDate() + index)).getDate()
+        return schdDate === weekDate
+    }
+    useEffect(() => {
+        setCurrentList(
+            turnList.filter(
+                (schd) =>
+                    new Date(schd.departDate) >= startDate && new Date(schd.departDate) <= endDate,
+            ),
+        )
+    }, [startDate, endDate, turnList])
+    useEffect(() => {
+        setStartDate(startOfWeek(currentDay, { weekStartsOn: 1 }))
+        setEndDate(endOfWeek(currentDay, { weekStartsOn: 1 }))
+    }, [currentDay])
+    useEffect(() => {
+        if (listSchedule.length > 0 && listTrip.length > 0) {
+            const listGo = listTrip.find((tp) => tp.turn === true)
+            const tempList = []
+            if (listGo) {
+                listSchedule.forEach((schedule) => {
+                    if (
+                        listGo.schedules &&
+                        listGo.schedules.find((schd) => schd.id === schedule.id)
+                    )
+                        tempList.push({
+                            ...schedule,
+                            turn: true,
+                        })
+                    else {
+                        tempList.push({
+                            ...schedule,
+                            turn: false,
+                        })
+                    }
+                })
+                setTurnList(tempList)
+            }
+        }
+    }, [listSchedule.length, listTrip.length])
+    return (
+        <>
+            <CRow className="my-3">
+                <CCol
+                    style={{ textAlign: 'right' }}
+                    className="d-flex align-items-center gap-1 customDatePicker"
+                >
+                    <b>
+                        <i>Ngày</i>
+                    </b>
+                    <DatePicker
+                        selected={currentDay}
+                        onChange={setCurrentDay}
+                        dateFormat="dd/MM/yyyy"
+                        showWeekNumbers
+                    />
+                    <b>
+                        <i>{` Tuần`}</i>
+                    </b>
+                    <CFormInput
+                        value={`${format(startDate, 'dd/MM/yyyy')} - ${format(
+                            endDate,
+                            'dd/MM/yyyy',
+                        )}`}
+                        disabled
+                        style={{ width: '250px', marrginLeft: '10px' }}
+                    ></CFormInput>
+                </CCol>
+                <CCol style={{ textAlign: 'right' }}>
+                    <CButtonGroup role="group" aria-label="Form option" color="info">
+                        <CFormCheck
+                            type="radio"
+                            button={{ color: 'primary', variant: 'outline' }}
+                            name="btnradio"
+                            id="btnradio1"
+                            autoComplete="off"
+                            label="Danh sách"
+                            checked={listForm === 'list'}
+                            onClick={() => setListForm('list')}
+                        />
+                        <CFormCheck
+                            type="radio"
+                            button={{ color: 'primary', variant: 'outline' }}
+                            name="btnradio"
+                            id="btnradio2"
+                            autoComplete="off"
+                            label="Lịch trình"
+                            checked={listForm === 'table'}
+                            onClick={() => setListForm('table')}
+                        />
+                    </CButtonGroup>
+                </CCol>
+            </CRow>
+            {listForm === 'list' && (
+                <CTable>
+                    <CTableHead>
+                        <CTableRow>
+                            <CTableHeaderCell scope="col">#</CTableHeaderCell>
+                            <CTableHeaderCell className="text-center" scope="col">
+                                Lượt xe
+                            </CTableHeaderCell>
+                            <CTableHeaderCell className="text-center" scope="col">
+                                Ngày khởi hành
+                            </CTableHeaderCell>
+                            <CTableHeaderCell className="text-center" scope="col">
+                                Giờ khởi hành
+                            </CTableHeaderCell>
+                            <CTableHeaderCell className="text-center" scope="col">
+                                Giờ kết thúc
+                            </CTableHeaderCell>
+                            <CTableHeaderCell className="text-center" scope="col">
+                                Xe bus
+                            </CTableHeaderCell>
+                        </CTableRow>
+                    </CTableHead>
+                    <CTableBody>
+                        {currentList.sort(sortTime).map((schedule, index) => (
+                            <CTableRow key={index}>
+                                <CTableHeaderCell scope="row">{index + 1}</CTableHeaderCell>
+                                <CTableDataCell className="text-center">
+                                    {schedule.turn === true ? 'Lượt đi' : 'Lượt về'}
+                                </CTableDataCell>
+                                <CTableDataCell className="text-center">
+                                    {convertToDisplayDate(schedule.departDate)}
+                                </CTableDataCell>
+                                <CTableDataCell className="text-center">
+                                    {schedule.departTime.slice(0, -3)}
+                                </CTableDataCell>
+                                <CTableDataCell className="text-center">
+                                    {schedule.finishTime === '00:00:00'
+                                        ? 'Đang cập nhật'
+                                        : schedule.finishTime.slice(0, -3)}
+                                </CTableDataCell>
+                                <CTableDataCell className="text-center">
+                                    {schedule.bus ? schedule.bus.licensePlate : 'Đang cập nhật'}
+                                </CTableDataCell>
+                            </CTableRow>
+                        ))}
+                    </CTableBody>
+                </CTable>
+            )}
+            {listForm === 'table' && (
+                <>
+                    <CTable stripedColumns bordered>
+                        <CTableHead>
+                            <CTableRow>
+                                <CTableHeaderCell scope="col">Buổi</CTableHeaderCell>
+                                {Array.from({ length: 7 }, (_, index) => index).map((dayIndex) => (
+                                    <CTableHeaderCell
+                                        key={dayIndex}
+                                        className="text-center"
+                                        scope="col"
+                                    >
+                                        <b>
+                                            <i>{dayInWeek[dayIndex]}</i>
+                                        </b>
+                                        <div>
+                                            {format(
+                                                new Date(startDate.getTime() + dayIndex * 86400000),
+                                                'dd/MM',
+                                            )}
+                                        </div>
+                                    </CTableHeaderCell>
+                                ))}
+                            </CTableRow>
+                        </CTableHead>
+                        <CTableBody>
+                            <CTableRow color="success">
+                                <CTableHeaderCell scope="row">
+                                    <i>Sáng</i>
+                                    <div>{`(6h-12h)`}</div>
+                                </CTableHeaderCell>
+                                {Array.from({ length: 7 }, (_, index) => index).map((dayIndex) => (
+                                    <CTableDataCell key={dayIndex}>
+                                        {filterTime(
+                                            currentList.filter(
+                                                (schedule) =>
+                                                    validDate(schedule, dayIndex) === true,
+                                            ),
+                                            'morning',
+                                        ).map((schedule) => (
+                                            <ScheduleWrap
+                                                key={schedule.id}
+                                                schedule={schedule}
+                                            ></ScheduleWrap>
+                                        ))}
+                                    </CTableDataCell>
+                                ))}
+                            </CTableRow>
+                            <CTableRow color="primary">
+                                <CTableHeaderCell scope="row">
+                                    <i>Chiều</i>
+                                    <div>{`(12h-18h)`}</div>
+                                </CTableHeaderCell>
+                                {Array.from({ length: 7 }, (_, index) => index).map((dayIndex) => (
+                                    <CTableDataCell key={dayIndex}>
+                                        {filterTime(
+                                            currentList.filter(
+                                                (schedule) =>
+                                                    validDate(schedule, dayIndex) === true,
+                                            ),
+                                            'afternoon',
+                                        ).map((schedule) => (
+                                            <ScheduleWrap
+                                                key={schedule.id}
+                                                schedule={schedule}
+                                            ></ScheduleWrap>
+                                        ))}
+                                    </CTableDataCell>
+                                ))}
+                            </CTableRow>
+                            <CTableRow color="info">
+                                <CTableHeaderCell scope="row">
+                                    <i>Tối</i>
+                                    <div>{`(18h-24h)`}</div>
+                                </CTableHeaderCell>
+                                {Array.from({ length: 7 }, (_, index) => index).map((dayIndex) => (
+                                    <CTableDataCell key={dayIndex}>
+                                        {filterTime(
+                                            currentList.filter(
+                                                (schedule) =>
+                                                    validDate(schedule, dayIndex) === true,
+                                            ),
+                                            'evening',
+                                        ).map((schedule) => (
+                                            <ScheduleWrap
+                                                key={schedule.id}
+                                                schedule={schedule}
+                                            ></ScheduleWrap>
+                                        ))}
+                                    </CTableDataCell>
+                                ))}
+                            </CTableRow>
+                            <CTableRow color="warning">
+                                <CTableHeaderCell scope="row">
+                                    <i>Khuya</i>
+                                    <div>{`(0h-6h)`}</div>
+                                </CTableHeaderCell>
+                                {Array.from({ length: 7 }, (_, index) => index).map((dayIndex) => (
+                                    <CTableDataCell key={dayIndex}>
+                                        {filterTime(
+                                            currentList.filter(
+                                                (schedule) =>
+                                                    validDate(schedule, dayIndex) === true,
+                                            ),
+                                            'late',
+                                        ).map((schedule) => (
+                                            <ScheduleWrap
+                                                key={schedule.id}
+                                                schedule={schedule}
+                                            ></ScheduleWrap>
+                                        ))}
+                                    </CTableDataCell>
+                                ))}
+                            </CTableRow>
+                        </CTableBody>
+                    </CTable>
+                    <div className="d-flex gap-2 align-items-center">
+                        <i>Ghi chú</i>
+                        <CCard color="success">
+                            <CCardBody className="p-1">Chuyến đi</CCardBody>
+                        </CCard>
+                        <CCard color="warning">
+                            <CCardBody className="p-1">Chuyến về</CCardBody>
+                        </CCard>
+                    </div>
+                </>
+            )}
+        </>
     )
 }
 
@@ -806,7 +1103,7 @@ const DetailDriver = () => {
                                                 )}
                                                 <div className="w-100 border-top border-1 mt-3 mb-3"></div>
                                                 <b>
-                                                    <i>Lịch sử chuyến xe</i>
+                                                    <i>Lịch trình hoạt động</i>
                                                 </b>
                                                 <br></br>
                                                 {listSchedule.length === 0 && (
@@ -815,6 +1112,7 @@ const DetailDriver = () => {
                                                 {listSchedule.length > 0 && (
                                                     <DriverScheduleHistory
                                                         listSchedule={listSchedule}
+                                                        listTrip={listTrip}
                                                     ></DriverScheduleHistory>
                                                 )}
                                             </CCardBody>

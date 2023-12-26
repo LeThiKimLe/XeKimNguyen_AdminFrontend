@@ -319,14 +319,14 @@ const AddScheduleForm = ({
     const validAvaiBusDriver = (time) => {
         let count = 0
         listTimeGo.forEach((tme) => {
-            if (Math.abs(convertTimeToInt(time) - convertTimeToInt(tme.time)) < curRoute.hours + 1)
+            if (Math.abs(convertTimeToInt(time) - convertTimeToInt(tme.time)) <= curRoute.hours + 1)
                 count = count + 1
         })
         listTimeReturn.forEach((tme) => {
-            if (Math.abs(convertTimeToInt(time) - convertTimeToInt(tme.time)) < curRoute.hours + 1)
+            if (Math.abs(convertTimeToInt(time) - convertTimeToInt(tme.time)) <= curRoute.hours + 1)
                 count = count + 1
         })
-        if (count < tripInfor.busCount && count < tripInfor.driverCount) return true
+        if (count <= tripInfor.busCount && count <= tripInfor.driverCount) return true
         else return false
     }
     const handleSchedule = () => {
@@ -990,7 +990,7 @@ const AssignScheduleBox = ({ curRoute, curTrip, listGo, listReturn, finishUpdate
         if (newSchd.length > 0) {
             if (
                 (prevTrip.overflow !== 0 &&
-                    convertTimeToInt(schedule.departTime) - prevTrip.overflow > 1) ||
+                    convertTimeToInt(schedule.departTime) - prevTrip.overflow >= 1) ||
                 prevTrip.overflow === 0
             ) {
                 newSchd.push(schedule)
@@ -1018,6 +1018,10 @@ const AssignScheduleBox = ({ curRoute, curTrip, listGo, listReturn, finishUpdate
             if (prevTrip.turn !== true && prevTrip.turn !== false) valid = true
             else if (schedule.turn !== prevTrip.turn) valid = true
             else valid = false
+        }
+        if (valid === true) {
+            console.log(schedule)
+            console.log(prevTrip)
         }
         return valid
     }
@@ -1069,7 +1073,7 @@ const AssignScheduleBox = ({ curRoute, curTrip, listGo, listReturn, finishUpdate
         let remainEndTimeNew = getOverflowTime(schd).remain
         if (remainEndTimeNew !== 0) {
             if (
-                driverSchedule.schedules.length * (curRoute.hours + 1) + remainEndTimeNew <
+                driverSchedule.schedules.length * (curRoute.hours + 1) + remainEndTimeNew <=
                     10 - previousTrip.overflow &&
                 validVehicleSchedule(driverSchedule.schedules, schd, previousTrip)
             )
@@ -1118,7 +1122,7 @@ const AssignScheduleBox = ({ curRoute, curTrip, listGo, listReturn, finishUpdate
             return false
         } else {
             if (
-                (busSchedule.schedules.length + 1) * (curRoute.hours + 1) <
+                (busSchedule.schedules.length + 1) * (curRoute.hours + 1) <=
                     24 - previousTrip.overflow &&
                 validVehicleSchedule(busSchedule.schedules, schd, previousTrip)
             )
@@ -1173,7 +1177,7 @@ const AssignScheduleBox = ({ curRoute, curTrip, listGo, listReturn, finishUpdate
                 id: item.id,
                 departTime: item.departTime.slice(0, -3),
                 arrivalTime: addHoursToTime(item.departTime, curRoute.hours),
-                turn: 1,
+                turn: true,
                 driver: item.driverUser ? item.driverUser.driver.driverId : 0,
                 bus: item.bus ? item.bus.id : 0,
                 note: item.note,
@@ -1185,7 +1189,7 @@ const AssignScheduleBox = ({ curRoute, curTrip, listGo, listReturn, finishUpdate
                 id: item.id,
                 departTime: item.departTime.slice(0, -3),
                 arrivalTime: addHoursToTime(item.departTime, curRoute.hours),
-                turn: 0,
+                turn: false,
                 driver: item.driverUser ? item.driverUser.driver.driverId : 0,
                 bus: item.bus ? item.bus.id : 0,
                 note: item.note,
@@ -1206,6 +1210,8 @@ const AssignScheduleBox = ({ curRoute, curTrip, listGo, listReturn, finishUpdate
             autoScheduling()
         }
     }, [autoSchdMode])
+    console.log(listDriverSchedule)
+    console.log(listBusSchedule)
     return (
         <>
             <b>{`Trạm A: ${curTrip.startStation.name} `}</b>
@@ -1254,10 +1260,10 @@ const AssignScheduleBox = ({ curRoute, curTrip, listGo, listReturn, finishUpdate
                                 {schedule.arrivalTime}
                             </CTableDataCell>
                             <CTableDataCell className="text-center">
-                                {schedule.turn === 1 ? 'A' : 'B'}
+                                {schedule.turn === true ? 'A' : 'B'}
                             </CTableDataCell>
                             <CTableDataCell className="text-center">
-                                {schedule.turn === 1 ? 'B' : 'A'}
+                                {schedule.turn === true ? 'B' : 'A'}
                             </CTableDataCell>
                             <CTableDataCell className="text-center">
                                 <CFormSelect
