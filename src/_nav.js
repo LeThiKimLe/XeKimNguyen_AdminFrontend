@@ -96,6 +96,11 @@ const _nav = [
                 name: 'Quản lý xe',
                 to: '/system-manage/buses',
             },
+            {
+                component: CNavItem,
+                name: 'Quản lý ngày',
+                to: '/system-manage/special-date',
+            },
         ],
         protected: true,
     },

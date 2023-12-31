@@ -91,6 +91,12 @@ const routes = [
     },
     { path: '/system-manage/buses', name: 'Quản lý xe', element: BusManagement, protected: true },
     {
+        path: '/system-manage/special-date',
+        name: 'Quản lý ngày',
+        element: SpecialDayManagement,
+        protected: true,
+    },
+    {
         path: '/schedule-manage',
         name: 'Điều hành xe',
         element: ScheduleManagement,
