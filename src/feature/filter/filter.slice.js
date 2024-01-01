@@ -130,7 +130,7 @@ const filterSlice = createSlice({
             state.rowOptions = action.payload
         },
         setFloorOptions: (state, action) => {
-            state.rowOptions = action.payload
+            state.floorOptions = action.payload
         },
         setSortOption: (state, action) => {
             state.sortOption = action.payload

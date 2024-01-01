@@ -314,7 +314,6 @@ const TicketDetail = ({ ticket, visible, handleShow }) => {
     useEffect(() => {
         hasUpdate.current = true
     }, [name, tel, pickStation, dropStation])
-    console.log(ticket)
     return (
         <>
             <CToaster ref={toaster} push={toast} placement="top-end" />

@@ -48,6 +48,7 @@ const FilterOption = ({ option, setActiveFilter, setActiveOption }) => {
     return (
         <>
             <CFormCheck
+                id={option.label}
                 label={option.label}
                 checked={option.onChoose}
                 onChange={handleActiveFilter}
@@ -298,101 +299,126 @@ const FilterBox = (props) => {
         }
     }
 
+    const getListSeat = (tripIn) => {
+        if (tripIn.tickets && tripIn.tickets.length > 0)
+            return tripIn.tickets.filter((tk) => tk.state !== 'Đã hủy').map((tk) => tk.seat)
+        return []
+    }
+
     const colFilter = (listTrip) => {
-        const conditions = Object.entries(colOptions)
+        const conditions = Object.entries(colOptions.options)
             .filter(([key, value]) => value.value === true)
             .map(([key, value]) => {
                 return key
             })
         if (conditions.length === 0) return listTrip
         else {
-            const filteredTrips = listTrip.filter((trip) =>
-                conditions.some(
-                    (key) =>
-                        (key === 'left' &&
-                            trip.tripInfor.route.busType.seatMap.seats.some(
-                                (seat) => seat.col === 0 && !trip.bookedSeat.includes(seat.name),
-                            )) ||
-                        (key === 'right' &&
-                            trip.tripInfor.route.busType.seatMap.seats.some(
-                                (seat) =>
-                                    seat.col === trip.tripInfor.route.busType.seatMap.colNo - 1 &&
-                                    !trip.bookedSeat.includes(seat.name),
-                            )) ||
-                        (key === 'middle' &&
-                            trip.tripInfor.route.busType.seatMap.seats.some(
-                                (seat) =>
-                                    seat.col !== 0 &&
-                                    seat.col !== trip.tripInfor.route.busType.seatMap.colNo - 1 &&
-                                    !trip.bookedSeat.includes(seat.name),
-                            )),
-                ),
-            )
+            const filteredTrips = listTrip.filter((trip) => {
+                const bookedSeat = getListSeat(trip)
+                if (
+                    conditions.some(
+                        (key) =>
+                            (key === 'left' &&
+                                trip.tripInfor.route.busType.seatMap.seats.some(
+                                    (seat) => seat.col === 0 && !bookedSeat.includes(seat.name),
+                                )) ||
+                            (key === 'right' &&
+                                trip.tripInfor.route.busType.seatMap.seats.some(
+                                    (seat) =>
+                                        seat.col ===
+                                            trip.tripInfor.route.busType.seatMap.colNo - 1 &&
+                                        !bookedSeat.includes(seat.name),
+                                )) ||
+                            (key === 'middle' &&
+                                trip.tripInfor.route.busType.seatMap.seats.some(
+                                    (seat) =>
+                                        seat.col !== 0 &&
+                                        seat.col !==
+                                            trip.tripInfor.route.busType.seatMap.colNo - 1 &&
+                                        !bookedSeat.includes(seat.name),
+                                )),
+                    )
+                )
+                    return true
+                else return false
+            })
             return filteredTrips
         }
     }
 
     const rowFilter = (listTrip) => {
-        const conditions = Object.entries(rowOptions)
+        const conditions = Object.entries(rowOptions.options)
             .filter(([key, value]) => value.value === true)
             .map(([key, value]) => {
                 return key
             })
         if (conditions.length === 0) return listTrip
         else {
-            const filteredTrips = listTrip.filter((trip) =>
-                conditions.some(
-                    (key) =>
-                        (key === 'top' &&
-                            trip.tripInfor.route.busType.seatMap.seats.some(
-                                (seat) =>
-                                    (seat.row === 0 || seat.row === 1) &&
-                                    !trip.bookedSeat.includes(seat.name),
-                            )) ||
-                        (key === 'bottom' &&
-                            trip.tripInfor.route.busType.seatMap.seats.some(
-                                (seat) =>
-                                    (seat.row === trip.tripInfor.route.busType.seatMap.rowNo - 1 ||
-                                        seat.row ===
-                                            trip.tripInfor.route.busType.seatMap.rowNo - 2) &&
-                                    !trip.bookedSeat.includes(seat.name),
-                            )) ||
-                        (key === 'middle' &&
-                            trip.tripInfor.route.busType.seatMap.seats.some(
-                                (seat) =>
-                                    (seat.row === 0 || seat.row === 1) &&
-                                    (seat.row !== trip.tripInfor.route.busType.seatMap.rowNo - 1 ||
-                                        seat.row !==
-                                            trip.tripInfor.route.busType.seatMap.rowNo - 2) &&
-                                    !trip.bookedSeat.includes(seat.name),
-                            )),
-                ),
-            )
+            const filteredTrips = listTrip.filter((trip) => {
+                const bookedSeat = getListSeat(trip)
+                if (
+                    conditions.some(
+                        (key) =>
+                            (key === 'top' &&
+                                trip.tripInfor.route.busType.seatMap.seats.some(
+                                    (seat) =>
+                                        (seat.row === 0 || seat.row === 1) &&
+                                        !bookedSeat.includes(seat.name),
+                                )) ||
+                            (key === 'bottom' &&
+                                trip.tripInfor.route.busType.seatMap.seats.some(
+                                    (seat) =>
+                                        (seat.row ===
+                                            trip.tripInfor.route.busType.seatMap.rowNo - 1 ||
+                                            seat.row ===
+                                                trip.tripInfor.route.busType.seatMap.rowNo - 2) &&
+                                        !bookedSeat.includes(seat.name),
+                                )) ||
+                            (key === 'middle' &&
+                                trip.tripInfor.route.busType.seatMap.seats.some(
+                                    (seat) =>
+                                        (seat.row === 0 || seat.row === 1) &&
+                                        (seat.row !==
+                                            trip.tripInfor.route.busType.seatMap.rowNo - 1 ||
+                                            seat.row !==
+                                                trip.tripInfor.route.busType.seatMap.rowNo - 2) &&
+                                        !bookedSeat.includes(seat.name),
+                                )),
+                    )
+                )
+                    return true
+                else return false
+            })
             return filteredTrips
         }
     }
 
     const floorFilter = (listTrip) => {
-        const conditions = Object.entries(floorOptions)
+        const conditions = Object.entries(floorOptions.options)
             .filter(([key, value]) => value.value === true)
             .map(([key, value]) => {
                 return key
             })
         if (conditions.length === 0) return listTrip
         else {
-            const filteredTrips = listTrip.filter((trip) =>
-                conditions.some(
-                    (key) =>
-                        (key === 'up' &&
-                            trip.tripInfor.route.busType.seatMap.seats.some(
-                                (seat) => seat.floor === 2 && !trip.bookedSeat.includes(seat.name),
-                            )) ||
-                        (key === 'down' &&
-                            trip.tripInfor.route.busType.seatMap.seats.some(
-                                (seat) => seat.floor === 1 && !trip.bookedSeat.includes(seat.name),
-                            )),
-                ),
-            )
+            const filteredTrips = listTrip.filter((trip) => {
+                const bookedSeat = getListSeat(trip)
+                if (
+                    conditions.some(
+                        (key) =>
+                            (key === 'up' &&
+                                trip.tripInfor.route.busType.seatMap.seats.some(
+                                    (seat) => seat.floor === 2 && !bookedSeat.includes(seat.name),
+                                )) ||
+                            (key === 'down' &&
+                                trip.tripInfor.route.busType.seatMap.seats.some(
+                                    (seat) => seat.floor === 1 && !bookedSeat.includes(seat.name),
+                                )),
+                    )
+                )
+                    return true
+                else return false
+            })
             return filteredTrips
         }
     }
