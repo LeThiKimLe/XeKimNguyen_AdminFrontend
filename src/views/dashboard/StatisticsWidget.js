@@ -150,11 +150,10 @@ const StatisticsWidget = () => {
                     color="primary"
                     value={
                         <>
-                            {`${todayTicket.revenue.toLocaleString()} VND`}
+                            {`${todayTicket.revenue.toLocaleString()} VND `}
                             <span className="fs-6 fw-normal">
                                 <span>{`${getTodayRevenueRate()}%`}</span>
                                 <span>
-                                    {' '}
                                     {getTodayRevenueRate() > 0 ? (
                                         <CIcon icon={cilArrowTop} />
                                     ) : (
@@ -337,7 +336,7 @@ const StatisticsWidget = () => {
                         <>
                             {`${monthTicket.revenue.toLocaleString()} VND`}
                             <span className="fs-6 fw-normal">
-                                <span>{`${getMonthRevenueRate()}%`}</span>
+                                <span>{` ${getMonthRevenueRate()}%`}</span>
                                 <span>
                                     {' '}
                                     {getMonthRevenueRate() > 0 ? (

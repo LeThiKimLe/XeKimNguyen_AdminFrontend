@@ -15,7 +15,7 @@ import { useSelector } from 'react-redux'
 import { selectListSource, selectListTarget } from 'src/feature/ticket/ticket.slice'
 import { convertToDisplayDate } from 'src/utils/convertUtils'
 import CIcon from '@coreui/icons-react'
-import { cilXCircle, cilArrowThickFromLeft } from '@coreui/icons'
+import { cilXCircle, cilArrowThickFromLeft, cilChevronBottom, cilChevronTop } from '@coreui/icons'
 import { useDispatch } from 'react-redux'
 import { ticketActions } from 'src/feature/ticket/ticket.slice'
 import { bookingActions } from 'src/feature/booking/booking.slice'
@@ -33,6 +33,7 @@ const ChangeTicket = () => {
     const [toast, addToast] = useState(0)
     const loading = useSelector(selectLoading)
     const toaster = useRef('')
+    const [expand, setExpand] = useState(true)
     const [changeAllow, setChangeAllow] = useState(false)
     const dispatch = useDispatch()
     const handleClearSource = (ticket) => {
@@ -106,7 +107,7 @@ const ChangeTicket = () => {
                             <CCol>
                                 <strong>{`Đổi vé: Chuyến ${getBookingTrip(isChanging)}`}</strong>
                             </CCol>
-                            <CCol style={{ textAlign: 'right' }} className="d-flex-end gap-1">
+                            <CCol style={{ textAlign: 'right' }} className="d-flex-end gap-2">
                                 <CButton
                                     style={{ marginRight: '10px' }}
                                     variant="outline"
@@ -122,10 +123,16 @@ const ChangeTicket = () => {
                                     onClick={changeTicket}
                                     loading={loading}
                                 ></CustomButton>
+                                <CIcon
+                                    style={{ marginLeft: '5px' }}
+                                    icon={expand ? cilChevronBottom : cilChevronTop}
+                                    role="button"
+                                    onClick={() => setExpand(!expand)}
+                                ></CIcon>
                             </CCol>
                         </CRow>
                     </CCardHeader>
-                    <CCardBody style={{ maxHeight: '150px', overflow: 'auto' }}>
+                    <CCardBody style={{ maxHeight: expand ? '150px' : '0px', overflow: 'auto' }}>
                         <CRow className="justify-content-center">
                             <CCol md="5" className="border-end">
                                 <CRow className="auto-col">

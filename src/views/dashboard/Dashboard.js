@@ -104,24 +104,24 @@ const Dashboard = () => {
         setYearValue(e)
         getMonthRange(e)
     }
-    const getYearRange = (yearIn) => {
+    const getYearRange = () => {
         var year = []
         const startYear = 2023
-        for (let i = startYear; i <= yearIn; i++) {
+        for (let i = startYear; i <= today.getFullYear(); i++) {
             year.push(i)
         }
         return year
     }
     const getMonthRange = (year) => {
-        if (2023 == year) {
+        if (2023 === year) {
             setMonthRange({
                 start: 8,
-                end: today.getMonth(),
+                end: today.getFullYear() === year ? today.getMonth() : 11,
             })
         } else {
             setMonthRange({
                 start: 0,
-                end: today.getMonth(),
+                end: today.getFullYear() === year ? today.getMonth() : 11,
             })
         }
     }
@@ -131,12 +131,12 @@ const Dashboard = () => {
         if (2023 == year) {
             setMonthRange2({
                 start: 8,
-                end: today.getMonth(),
+                end: today.getFullYear() === year ? today.getMonth() : 11,
             })
         } else {
             setMonthRange2({
                 start: 0,
-                end: today.getMonth(),
+                end: today.getFullYear() === year ? today.getMonth() : 11,
             })
         }
     }
@@ -184,12 +184,12 @@ const Dashboard = () => {
         if (2023 == year) {
             setMonthRange3({
                 start: 8,
-                end: today.getMonth(),
+                end: today.getFullYear() === year ? today.getMonth() : 11,
             })
         } else {
             setMonthRange3({
                 start: 0,
-                end: today.getMonth(),
+                end: today.getFullYear() === year ? today.getMonth() : 11,
             })
         }
     }
@@ -283,6 +283,18 @@ const Dashboard = () => {
             setReloadCount(false)
         }
     }, [reloadCount])
+    useEffect(() => {
+        dispatch(statisticsThunk.getCurrentMonthStatistics(yearValue))
+            .unwrap()
+            .then(() => {})
+            .catch(() => {})
+    }, [yearValue])
+    useEffect(() => {
+        handleMonthChoose(monthRange2.end)
+    }, [yearValue2])
+    useEffect(() => {
+        handleMonthChoose3(monthRange3.end)
+    }, [yearValue3])
     return (
         <>
             <StatisticsWidget />
@@ -298,7 +310,7 @@ const Dashboard = () => {
                                 className="mt-3 mb-3"
                                 onChange={(e) => handleYearChoose(parseInt(e.target.value))}
                             >
-                                {getYearRange(yearValue).map((year) => (
+                                {getYearRange().map((year) => (
                                     <option value={year} key={year}>
                                         {year}
                                     </option>
@@ -410,7 +422,7 @@ const Dashboard = () => {
                                     <option value="-1" disabled>
                                         Chọn năm
                                     </option>
-                                    {getYearRange(yearValue2).map((year) => (
+                                    {getYearRange().map((year) => (
                                         <option value={year} key={year}>
                                             {year}
                                         </option>
@@ -538,14 +550,14 @@ const Dashboard = () => {
                             </h4>
                             <CRow>
                                 <CFormSelect
-                                    value={yearValue2}
+                                    value={yearValue3}
                                     className="mt-3 mb-3 col-sm-2"
                                     onChange={(e) => handleYearChoose3(parseInt(e.target.value))}
                                 >
                                     <option value="-1" disabled>
                                         Chọn năm
                                     </option>
-                                    {getYearRange(yearValue3).map((year) => (
+                                    {getYearRange().map((year) => (
                                         <option value={year} key={year}>
                                             {year}
                                         </option>

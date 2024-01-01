@@ -91,7 +91,7 @@ const ScheduleWrap = ({ schedule }) => {
         </CTable>
     )
 }
-const BusScheduleHistory = ({ listSchedule, listTrip }) => {
+const BusScheduleHistory = ({ listSchedule, listTrip, busId }) => {
     const [turnList, setTurnList] = useState(listSchedule)
     const [currentList, setCurrentList] = useState(listSchedule)
     const [listForm, setListForm] = useState('list')
@@ -214,8 +214,8 @@ const BusScheduleHistory = ({ listSchedule, listTrip }) => {
                         <CFormCheck
                             type="radio"
                             button={{ color: 'primary', variant: 'outline' }}
-                            name="btnradio"
-                            id="btnradio1"
+                            name={busId}
+                            id={busId + 'btnradio1'}
                             autoComplete="off"
                             label="Danh sách"
                             checked={listForm === 'list'}
@@ -224,8 +224,8 @@ const BusScheduleHistory = ({ listSchedule, listTrip }) => {
                         <CFormCheck
                             type="radio"
                             button={{ color: 'primary', variant: 'outline' }}
-                            name="btnradio"
-                            id="btnradio2"
+                            name={busId}
+                            id={busId + 'btnradio2'}
                             autoComplete="off"
                             label="Lịch trình"
                             checked={listForm === 'table'}
@@ -1256,6 +1256,7 @@ const Bus = ({ bus, currentBus, setActiveBus, finishUpdate }) => {
                                                 <BusScheduleHistory
                                                     listSchedule={listSchedule}
                                                     listTrip={listTrip}
+                                                    busId={bus.id}
                                                 ></BusScheduleHistory>
                                             )}
                                         </CCardBody>

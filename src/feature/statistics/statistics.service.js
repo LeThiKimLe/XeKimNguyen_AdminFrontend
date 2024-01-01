@@ -21,11 +21,11 @@ const getTodayStatistics = createAsyncThunk('admin/trips/statistic', async (_, t
 
 const getCurrentMonthStatistics = createAsyncThunk(
     'admin/trips/statistic/month',
-    async (_, thunkAPI) => {
+    async (year, thunkAPI) => {
         try {
             const result = await axiosClient.get('admin/trips/statistic', {
                 params: {
-                    year: new Date().getFullYear(),
+                    year: year ? year : new Date().getFullYear(),
                     month: 0,
                 },
             })
