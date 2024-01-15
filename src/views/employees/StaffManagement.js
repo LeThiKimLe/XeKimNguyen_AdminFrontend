@@ -396,35 +396,31 @@ const StaffManagement = () => {
                                     </CTableRow>
                                 </CTableHead>
                                 <CTableBody>
-                                    {listStaff
-                                        .filter((staff) => staff.account.active === true)
-                                        .map((emp) => (
-                                            <CTableRow key={emp.id}>
-                                                <CTableHeaderCell scope="row">{`#${emp.staff.staffId}`}</CTableHeaderCell>
-                                                <CTableDataCell>{emp.name}</CTableDataCell>
-                                                <CTableDataCell>{emp.tel}</CTableDataCell>
-                                                <CTableDataCell>{emp.email}</CTableDataCell>
-                                                <CTableDataCell>
-                                                    {convertToDisplayDate(emp.staff.beginWorkDate)}
-                                                </CTableDataCell>
-                                                <CTableDataCell>
-                                                    {emp.account.active ? (
-                                                        <i style={{ color: 'green' }}>
-                                                            Đang làm việc
-                                                        </i>
-                                                    ) : (
-                                                        <i style={{ color: 'red' }}>Nghỉ việc</i>
-                                                    )}
-                                                </CTableDataCell>
-                                                <CTableDataCell>
-                                                    <i onClick={() => setCurrentUser(emp)}>
-                                                        <a href="#/employee-manage/staffs/detail">
-                                                            Xem chi tiết
-                                                        </a>
-                                                    </i>
-                                                </CTableDataCell>
-                                            </CTableRow>
-                                        ))}
+                                    {listStaff.map((emp) => (
+                                        <CTableRow key={emp.id}>
+                                            <CTableHeaderCell scope="row">{`#${emp.staff.staffId}`}</CTableHeaderCell>
+                                            <CTableDataCell>{emp.name}</CTableDataCell>
+                                            <CTableDataCell>{emp.tel}</CTableDataCell>
+                                            <CTableDataCell>{emp.email}</CTableDataCell>
+                                            <CTableDataCell>
+                                                {convertToDisplayDate(emp.staff.beginWorkDate)}
+                                            </CTableDataCell>
+                                            <CTableDataCell>
+                                                {emp.account.active ? (
+                                                    <i style={{ color: 'green' }}>Đang làm việc</i>
+                                                ) : (
+                                                    <i style={{ color: 'red' }}>Nghỉ việc</i>
+                                                )}
+                                            </CTableDataCell>
+                                            <CTableDataCell>
+                                                <i onClick={() => setCurrentUser(emp)}>
+                                                    <a href="#/employee-manage/staffs/detail">
+                                                        Xem chi tiết
+                                                    </a>
+                                                </i>
+                                            </CTableDataCell>
+                                        </CTableRow>
+                                    ))}
                                 </CTableBody>
                             </CTable>
                         )}

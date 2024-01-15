@@ -237,6 +237,7 @@ const Station = ({ locationId, station, empty, finishAdd, visibleEmpty }) => {
                         color="light"
                     >
                         <div
+                            id="station-header"
                             onMouseEnter={handleMouseEnter}
                             onMouseLeave={handleMouseLeave}
                             className="d-flex align-items-center position-relative"
@@ -244,6 +245,7 @@ const Station = ({ locationId, station, empty, finishAdd, visibleEmpty }) => {
                             <CFormInput
                                 role="button"
                                 value={name}
+                                id="station-name"
                                 onChange={(e) => setName(e.target.value)}
                                 className={isUpdate ? '' : 'border-0'}
                                 readOnly={!isUpdate}
@@ -254,6 +256,7 @@ const Station = ({ locationId, station, empty, finishAdd, visibleEmpty }) => {
                                     className="position-absolute end-0"
                                     variant="outline"
                                     style={{ scale: '0.8' }}
+                                    id="station-close"
                                     onClick={() => setShowConfirm(true)}
                                 >
                                     <CIcon icon={cilX}></CIcon>
@@ -264,6 +267,7 @@ const Station = ({ locationId, station, empty, finishAdd, visibleEmpty }) => {
                                     color="success"
                                     className="position-absolute end-0"
                                     variant="outline"
+                                    id="station-open"
                                     style={{ scale: '0.8' }}
                                     onClick={() => setShowConfirmOpen(true)}
                                 >
@@ -283,6 +287,7 @@ const Station = ({ locationId, station, empty, finishAdd, visibleEmpty }) => {
                                         plainText
                                         value={address}
                                         className="border-0"
+                                        id="station-address"
                                         onChange={handleOnChange}
                                         ref={curInput}
                                     />
@@ -315,6 +320,7 @@ const Station = ({ locationId, station, empty, finishAdd, visibleEmpty }) => {
                                         style={{ width: 'fit-content', scale: '0.8' }}
                                         onClick={handleUpdate}
                                         className="mr-1"
+                                        id="update-station"
                                     >
                                         {!isUpdate ? (
                                             <CIcon icon={cilPencil}></CIcon>
@@ -430,6 +436,7 @@ const Station = ({ locationId, station, empty, finishAdd, visibleEmpty }) => {
                                 </CCol>
                                 <CCol style={{ textAlign: 'right' }}>
                                     <CButton
+                                        id="save-station"
                                         color="success"
                                         variant="outline"
                                         style={{ width: 'fit-content', scale: '0.8' }}
@@ -440,6 +447,7 @@ const Station = ({ locationId, station, empty, finishAdd, visibleEmpty }) => {
                                         <CIcon icon={cilSave}></CIcon>
                                     </CButton>
                                     <CButton
+                                        id="cancel-station"
                                         color="danger"
                                         variant="outline"
                                         style={{ width: 'fit-content', scale: '0.8' }}
@@ -573,6 +581,7 @@ const Location = ({ location, empty, finishAdd, visible }) => {
                                     onChange={(e) => setName(e.target.value)}
                                     onKeyDown={handleKeyDown}
                                     onBlur={handleBlur}
+                                    name="location-name"
                                 ></CFormInput>
                             </CCol>
                             <CCol>
@@ -629,7 +638,12 @@ const Location = ({ location, empty, finishAdd, visible }) => {
                             finishAdd={finishAddStation}
                             visibleEmpty={showAdd}
                         ></Station>
-                        <CButton variant="outline" color="dark" onClick={() => setShowAdd(true)}>
+                        <CButton
+                            id="add-station"
+                            variant="outline"
+                            color="dark"
+                            onClick={() => setShowAdd(true)}
+                        >
                             <CIcon icon={cilPlus}></CIcon>
                         </CButton>
                     </CCardBody>
@@ -720,6 +734,7 @@ const Location = ({ location, empty, finishAdd, visible }) => {
                                     onChange={(e) => setName(e.target.value)}
                                     onKeyDown={handleKeyDownAdd}
                                     onBlur={handleBlurAdd}
+                                    name="add-form"
                                     placeholder="Nhập tên trạm"
                                 ></CFormInput>
                             </CCol>

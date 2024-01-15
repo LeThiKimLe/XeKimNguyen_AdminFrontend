@@ -628,7 +628,7 @@ const ScheduleManagement = () => {
     const listRoute = useSelector(selectListRoute)
     const [currentRoute, setCurrentRoute] = useState(0)
     const [currentTrip, setCurrentTrip] = useState(0)
-    const [currentDay, setCurrentDay] = useState(new Date())
+    const [currentDay, setCurrentDate] = useState(new Date())
     const startDate = startOfWeek(currentDay, { weekStartsOn: 1 })
     const endDate = endOfWeek(currentDay, { weekStartsOn: 1 })
     const listReverse = useRef([])
@@ -640,6 +640,12 @@ const ScheduleManagement = () => {
     const countLoad = useRef(0)
     const [reload, setReload] = useState(0)
     const [selectedTab, setSelectedTab] = useState(0)
+    const setCurrentDay = (newDate) => {
+        if (newDate instanceof Date) {
+            // newDate is a Date object
+            setCurrentDate(newDate)
+        }
+    }
     const getListTrip = (routeId) => {
         const routeIn = listRoute.find((rt) => rt.id == routeId)
         var listTrip = []
@@ -762,6 +768,7 @@ const ScheduleManagement = () => {
             <CRow className="justify-content-between">
                 <CCol md="3">
                     <CFormSelect
+                        id="route-select"
                         value={currentRoute}
                         onChange={(e) => handleSelectRoute(e.target.value)}
                     >

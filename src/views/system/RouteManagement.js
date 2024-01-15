@@ -31,7 +31,7 @@ import {
     CCardFooter,
     CFormCheck,
 } from '@coreui/react'
-import { getRouteJourney } from 'src/utils/tripUtils'
+import { getRouteJourney, getTripJourney } from 'src/utils/tripUtils'
 import { Tab, Tabs, TabList, TabPanel } from 'react-tabs'
 import { convertToStamp, convertToStampSplit, convertToPeriodTime } from 'src/utils/convertUtils'
 import CustomButton from '../customButton/CustomButton'
@@ -390,6 +390,7 @@ const Trip = ({ route, trip }) => {
         <>
             <CToaster ref={toaster} push={toast} placement="top-end" />
             <CCard
+                id={`${trip.startStation.name} - ${trip.endStation.name}`}
                 role="button"
                 onClick={() => setShowDetail(!showDetail)}
                 className="p-2 w-75 mb-2"
@@ -399,7 +400,11 @@ const Trip = ({ route, trip }) => {
                     <i>{`${trip.startStation.name} - ${trip.endStation.name}`}</i>
                 </b>
             </CCard>
-            <CCollapse visible={showDetail} className="mb-2">
+            <CCollapse
+                id={`${trip.startStation.name} - ${trip.endStation.name} detail`}
+                visible={showDetail}
+                className="mb-2"
+            >
                 <CCard className="mt-1">
                     <CCardHeader>
                         <b>Danh sách điểm đón / trả</b>
@@ -418,6 +423,7 @@ const Trip = ({ route, trip }) => {
                                     ))}
                                     {!isAddStopStart && trip.active === true && (
                                         <CButton
+                                            id="pick-add"
                                             variant="outline"
                                             color="dark"
                                             onClick={() => setIsAddStopStart(true)}
@@ -435,6 +441,7 @@ const Trip = ({ route, trip }) => {
                                             </CCardHeader>
                                             <CCardBody>
                                                 <CFormSelect
+                                                    id="pick-select"
                                                     value={addStart}
                                                     onChange={(e) =>
                                                         setAddStart(parseInt(e.target.value))
@@ -485,6 +492,7 @@ const Trip = ({ route, trip }) => {
                                     ))}
                                     {!isAddStopEnd && trip.active === true && (
                                         <CButton
+                                            id="drop-add"
                                             variant="outline"
                                             color="dark"
                                             onClick={() => setIsAddStopEnd(true)}
@@ -502,6 +510,7 @@ const Trip = ({ route, trip }) => {
                                             </CCardHeader>
                                             <CCardBody>
                                                 <CFormSelect
+                                                    id="drop-select"
                                                     value={addEnd}
                                                     onChange={(e) =>
                                                         setAddEnd(parseInt(e.target.value))
@@ -674,6 +683,7 @@ const AddTripForm = ({ route, visible, setVisible }) => {
                     <CRow className="mt-2">
                         <CCol>
                             <CFormSelect
+                                id="start-select"
                                 value={dep}
                                 onChange={(e) => setDep(parseInt(e.target.value))}
                             >
@@ -687,6 +697,7 @@ const AddTripForm = ({ route, visible, setVisible }) => {
                         </CCol>
                         <CCol>
                             <CFormSelect
+                                id="end-select"
                                 value={des}
                                 onChange={(e) => setDes(parseInt(e.target.value))}
                                 disabled={dep === 0}
@@ -824,7 +835,7 @@ const Route = ({ route }) => {
     return (
         <>
             <CToaster ref={toaster} push={toast} placement="top-end" />
-            <CAccordionItem itemKey={route.id} className="mb-3">
+            <CAccordionItem itemKey={route.id} className="mb-3" id={getRouteJourney(route)}>
                 <CAccordionHeader>
                     <b>{getRouteJourney(route)}</b>
                 </CAccordionHeader>
@@ -890,7 +901,7 @@ const Route = ({ route }) => {
                                             >
                                                 <CFormInput
                                                     type="number"
-                                                    id="distance"
+                                                    id="minutes"
                                                     value={`${time.minutes}`}
                                                     disabled={!isUpdateRoute}
                                                     onChange={(e) =>
@@ -938,9 +949,11 @@ const Route = ({ route }) => {
                                                 disabled={!isUpdateRoute}
                                                 onChange={(e) =>
                                                     setPrice(
-                                                        parseFloat(
-                                                            e.target.value.replace(/,/g, ''),
-                                                        ),
+                                                        e.target.value !== ''
+                                                            ? parseFloat(
+                                                                  e.target.value.replace(/,/g, ''),
+                                                              )
+                                                            : 0,
                                                     )
                                                 }
                                                 aria-describedby="price"
@@ -955,6 +968,7 @@ const Route = ({ route }) => {
                                     </CFormLabel>
                                     <CCol sm={8}>
                                         <CFormSelect
+                                            id="bus-type-select"
                                             value={busType}
                                             required
                                             onChange={(e) => setBusType(e.target.value)}
@@ -974,6 +988,7 @@ const Route = ({ route }) => {
                                     </CFormLabel>
                                     <CCol sm={8}>
                                         <CFormSelect
+                                            id="parents-route-select"
                                             value={parents}
                                             onChange={(e) => setParents(parseInt(e.target.value))}
                                             disabled={!isUpdateRoute}
@@ -1355,7 +1370,11 @@ const RouteCreatForm = ({ visible, setVisible, finishAdd }) => {
                 <b>Chọn trạm</b>
                 <CRow>
                     <CCol>
-                        <CFormSelect value={dep} onChange={(e) => setDep(parseInt(e.target.value))}>
+                        <CFormSelect
+                            id="dep-select"
+                            value={dep}
+                            onChange={(e) => setDep(parseInt(e.target.value))}
+                        >
                             <option value={0}>Chọn điểm đầu</option>
                             {listLocation.map((location) => (
                                 <option key={location.id} value={location.id}>
@@ -1366,6 +1385,7 @@ const RouteCreatForm = ({ visible, setVisible, finishAdd }) => {
                     </CCol>
                     <CCol>
                         <CFormSelect
+                            id="des-select"
                             value={des}
                             onChange={(e) => setDes(parseInt(e.target.value))}
                             disabled={dep === 0}
@@ -1535,6 +1555,7 @@ const RouteCreatForm = ({ visible, setVisible, finishAdd }) => {
                                             </CFormLabel>
                                             <CCol sm={8}>
                                                 <CFormSelect
+                                                    id="bus-select"
                                                     value={busType}
                                                     required
                                                     onChange={(e) =>
@@ -1558,6 +1579,7 @@ const RouteCreatForm = ({ visible, setVisible, finishAdd }) => {
                                             </CFormLabel>
                                             <CCol sm={8}>
                                                 <CFormSelect
+                                                    id="parents-select"
                                                     value={parents}
                                                     onChange={(e) =>
                                                         setParents(parseInt(e.target.value))

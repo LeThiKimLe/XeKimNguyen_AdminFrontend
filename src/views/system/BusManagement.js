@@ -635,7 +635,12 @@ const Bus = ({ bus, currentBus, setActiveBus, finishUpdate }) => {
     return (
         <>
             <CToaster ref={toaster} push={toast} placement="top-end" />
-            <CAccordionItem itemKey={bus.id} className="mb-2" onClick={() => setActiveBus(bus.id)}>
+            <CAccordionItem
+                itemKey={bus.id}
+                className="mb-2"
+                onClick={() => setActiveBus(bus.id)}
+                id={bus.licensePlate}
+            >
                 <CAccordionHeader>
                     <b>{bus.licensePlate}</b>
                 </CAccordionHeader>
@@ -735,6 +740,7 @@ const Bus = ({ bus, currentBus, setActiveBus, finishUpdate }) => {
                                                     </CFormLabel>
                                                     <CCol sm={8}>
                                                         <CFormSelect
+                                                            id="busType"
                                                             value={busType}
                                                             onChange={(e) =>
                                                                 setBusType(parseInt(e.target.value))
@@ -761,6 +767,7 @@ const Bus = ({ bus, currentBus, setActiveBus, finishUpdate }) => {
                                                     </CFormLabel>
                                                     <CCol sm={8}>
                                                         <CFormSelect
+                                                            id="busState"
                                                             value={availability}
                                                             onChange={(e) =>
                                                                 setAvailability(e.target.value)
@@ -1437,6 +1444,7 @@ const OpenForm = ({ visible, setVisible, finishAdd, currentRoute, currentTrip })
                                     </CFormLabel>
                                     <CCol sm={8}>
                                         <CFormSelect
+                                            id="busType2"
                                             required
                                             value={typeId}
                                             onChange={(e) => setTypeId(e.target.value)}

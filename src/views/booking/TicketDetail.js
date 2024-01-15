@@ -120,10 +120,27 @@ const TicketDetail = ({ ticket, visible, handleShow }) => {
         } else {
             if (oldBooker) {
                 console.log(oldBooker.listBooking)
-                setListSame(
-                    oldBooker.listBooking.filter((book) => book.code === ticket.booking.code)[0]
-                        .tickets,
+                const listTicket = oldBooker.listBooking.filter(
+                    (book) => book.code === ticket.booking.code,
                 )
+                if (listTicket.length > 0) setListSame(listTicket[0].tickets)
+                else {
+                    dispatch(ticketThunk.searchTicket(ticket.booking.tel))
+                        .unwrap()
+                        .then((res) => {
+                            dispatch(
+                                bookingActions.updateBooker({
+                                    tel: ticket.booking.tel,
+                                    listBooking: res,
+                                }),
+                            )
+                            const fil = res.filter((book) => book.code === ticket.booking.code)[0]
+                            setListSame(fil.tickets)
+                        })
+                        .catch((error) => {
+                            console.log(error)
+                        })
+                }
             }
         }
     }
@@ -377,6 +394,7 @@ const TicketDetail = ({ ticket, visible, handleShow }) => {
                                                     type="text"
                                                     disabled={!isUpdating}
                                                     value={tel}
+                                                    name="tel"
                                                     className="mb-2"
                                                     onChange={(e) => setTel(e.target.value)}
                                                     required

@@ -43,6 +43,11 @@ const bookingSlice = createSlice({
         addBooker: (state, action) => {
             state.listBooker = [...state.listBooker, action.payload]
         },
+        updateBooker: (state, action) => {
+            const { tel, listBooking } = action.payload
+            const index = state.listBooker.findIndex((booker) => booker.tel === tel)
+            if (index !== -1) state.listBooker[index].listBooking = listBooking
+        },
         setAdjust: (state, action) => {
             state.isAdjusting = action.payload
         },

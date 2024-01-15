@@ -121,7 +121,11 @@ const ScheduleBox = ({ listTime, addTime, removeTime, turn }) => {
                 </CCard>
             </CCol>
             <CCol sm={3}>
-                <CButton color="info" onClick={() => setOpenTimer(!openTimer)}>
+                <CButton
+                    id={turn === 1 ? 'go' : 'return'}
+                    color="info"
+                    onClick={() => setOpenTimer(!openTimer)}
+                >
                     <CIcon icon={cilPlus}></CIcon>
                     Thêm giờ
                 </CButton>
@@ -142,6 +146,7 @@ const ScheduleBox = ({ listTime, addTime, removeTime, turn }) => {
                                 clearIcon={null}
                             />
                             <CButton
+                                id={turn === 1 ? 'add-go' : 'add-return'}
                                 letiant="outline"
                                 color="info"
                                 onClick={() => addTime(curTime)}
@@ -512,7 +517,7 @@ const AddScheduleForm = ({
                                             <CCol sm={8}>
                                                 <CFormInput
                                                     type="text"
-                                                    id="trip"
+                                                    id="time-span"
                                                     readOnly
                                                     value={`${format(
                                                         dateRange[0].startDate,

@@ -92,7 +92,11 @@ const ConfirmCancel = () => {
                         <CCardBody>
                             <CAccordion activeItemKey={keyOpen}>
                                 {sortList.map((request) => (
-                                    <CAccordionItem itemKey={request.id} key={request.id}>
+                                    <CAccordionItem
+                                        itemKey={request.id}
+                                        key={request.id}
+                                        id={request.id}
+                                    >
                                         <CAccordionHeader
                                             onClick={() =>
                                                 searchBooking(

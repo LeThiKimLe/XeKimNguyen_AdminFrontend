@@ -241,7 +241,7 @@ const TicketDetail = ({ visible }) => {
                                         <CFormLabel htmlFor="validationCustom01">Các vé</CFormLabel>
                                         {booking.tickets.map((tk) => (
                                             <CCol key={tk.id} xs="4" className="mb-2">
-                                                <CCard>
+                                                <CCard id={tk.seat}>
                                                     <CCardBody>
                                                         <CFormCheck
                                                             label={tk.seat}
@@ -279,6 +279,7 @@ const TicketDetail = ({ visible }) => {
                                                                 onClick={(e) =>
                                                                     handleSetPosition(e, tk)
                                                                 }
+                                                                id={tk.seat}
                                                             >
                                                                 Xem vị trí
                                                                 <CIcon
