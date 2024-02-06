@@ -101,6 +101,11 @@ const _nav = [
                 name: 'Quản lý ngày',
                 to: '/system-manage/special-date',
             },
+            {
+                component: CNavItem,
+                name: 'Quản lý đánh giá',
+                to: '/system-manage/reviews',
+            },
         ],
         protected: true,
     },
